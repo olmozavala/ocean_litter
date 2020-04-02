@@ -7,6 +7,9 @@ import zipfile
 import zlib
 import pandas as pd
 from utils.ParticlesByCountry import case1
+from config.MainConfig import get_op_config
+from config.params import WorldLitter
+
 
 compression = zipfile.ZIP_DEFLATED
 
@@ -14,25 +17,19 @@ def myfmt(r): # 'Round to 2 decimals'
     return F"{r:.2f}"
 vecfmt = np.vectorize(myfmt)
 
-# ------- COAPS ---------
-# output_folder = '/var/www/html/data'
-# output_folder = '/data/UN_Litter_data/output_txt'
-# input_folder = '/data/UN_Litter_data/V1_Oct/'
+config = get_op_config()
 
 # ------- Home ---------
-# output_folder = '/home/data/UN_Litter_data/for_website'
-output_folder = '/var/www/html/data'
-input_folder = '/home/data/UN_Litter_data/output'
-# input_file = '2020-03-18_13_29_output.nc'
-input_file = '2020-03-18_13_37_output.nc'
+output_folder = config[WorldLitter.output_folder_web]
+input_folder = config[WorldLitter.output_folder]
+input_file = config[WorldLitter.output_file]
 
-countries_file_name = '/home/data/UN_Litter_data/Particles_by_Country.csv'
+countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 df_country_list = df_country_list.dropna()
 
 all_reduce_particles_by = [10, 8, 4]
 min_number_particles = 20
-
 
 # Iterate over the options to reduce the number of particles
 for reduce_particles_global in all_reduce_particles_by:
