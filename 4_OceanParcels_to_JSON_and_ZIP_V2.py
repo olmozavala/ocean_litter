@@ -68,7 +68,7 @@ for reduce_particles_global in all_reduce_particles_by:
     for cur_country_name in df_country_list.index:
         print(F'-------- {cur_country_name} ----------')
         # First and last particle position
-        particles_for_country_str = df_country_list.loc[cur_country_name]['idx'].replace(']','').replace('[','').split(',')
+        particles_for_country_str = df_country_list.loc[cur_country_name]['idx_country'].replace(']','').replace('[','').split(',')
         particles_for_country = [int(x) for x in particles_for_country_str]
 
         tot_particles = len(particles_for_country)
@@ -99,5 +99,3 @@ for reduce_particles_global in all_reduce_particles_by:
     zf = zipfile.ZipFile(zip_file_name, mode='w')
     zf.write(merged_output_file, compress_type=compression)
     zf.close()
-
-

@@ -63,6 +63,7 @@ def main():
     t = time.time()
     # pset.execute(AdvectionRK4+pset.Kernel(periodicBC),
     pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D_OZ),
+    # pset.execute(AdvectionRK4,
                  runtime=config[WorldLitter.run_time],
                  dt=timedelta(minutes=60),
                  output_file=out_parc_file)
@@ -74,6 +75,8 @@ def main():
     print(F"Done time={time.time()-t}.....")
 
     print("Plotting output........")
+    # domain = {'N': 31, 'S': 16, 'E': -76, 'W': -98}
+    # pset.show(field=sum_field_set.U, domain=domain)  # Draw current particles
     out_parc_file.export() # Save trajectories to file
     # plotTrajectoriesFile(output_file) # Plotting trajectories
 
