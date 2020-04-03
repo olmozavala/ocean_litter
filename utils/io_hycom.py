@@ -12,4 +12,5 @@ def read_files(base_folder, years, wind=False):
         for c_file in files:
             all_files.append(join(c_year_path, c_file))
 
+    all_files.sort()
     return all_files

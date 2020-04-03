@@ -62,8 +62,8 @@ def main():
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
     # pset.execute(AdvectionRK4+pset.Kernel(periodicBC),
-    #pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D_OZ),
-    pset.execute(AdvectionRK4,
+    pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D_OZ),
+    # pset.execute(AdvectionRK4,
                  runtime=config[WorldLitter.run_time],
                  dt=timedelta(minutes=60),
                  output_file=out_parc_file)
