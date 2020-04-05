@@ -1,4 +1,4 @@
-from parcels import FieldSet, ParticleSet, Variable, JITParticle, AdvectionRK4, plotTrajectoriesFile
+from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, AdvectionRK4, plotTrajectoriesFile
 import numpy as np
 from datetime import timedelta, datetime
 import time
@@ -37,13 +37,17 @@ def main():
     print("Reading data.....")
     # Adding the currents field
     currents_field_set = FieldSet.from_netcdf(currents_file_names, variables, dimensions,allow_time_extrapolation=True)
+
+    # -------  Adding constants for periodic halo
     currents_field_set.add_constant('halo_west', currents_field_set.U.grid.lon[0])
     currents_field_set.add_constant('halo_east', currents_field_set.U.grid.lon[-1])
     currents_field_set.add_periodic_halo(zonal=True)                                   #create a zonal halo
+
     wvariables = {'U': 'uwnd',
                   'V': 'vwnd'}
     # Adding the winds field
     winds_field_set = FieldSet.from_netcdf(winds_file_names, wvariables, dimensions, allow_time_extrapolation=True)
+    # -------  Adding constants for periodic halo
     winds_field_set.add_constant('halo_west', winds_field_set.U.grid.lon[0])
     winds_field_set.add_constant('halo_east', winds_field_set.U.grid.lon[-1])
     winds_field_set.add_periodic_halo(zonal=True)                                   #create a zonal halo
@@ -52,6 +56,15 @@ def main():
     winds_field_set.V.set_scaling_factor(wind_factor)
     sum_field_set = FieldSet(U=currents_field_set.U + winds_field_set.U,
                              V=currents_field_set.V + winds_field_set.V)
+    # -------  Making syntetic diffusion coefficient
+    U_grid = currents_field_set.U.grid
+    V_grid = currents_field_set.V.grid
+    grid_size = (U_grid.tdim, U_grid.ydim, U_grid.xdim-10)  # The -10 is for the halo
+    data = np.ones(grid_size)  # this is the coefficient
+    kh_meridional_field = Field('Kh_meridional', data, grid=U_grid)
+    kh_zonal_field = Field('Kh_zonal', data, grid=V_grid)
+    sum_field_set.add_field(kh_meridional_field)
+    sum_field_set.add_field(kh_zonal_field)
 
 
     print("Setting up everything.....")
