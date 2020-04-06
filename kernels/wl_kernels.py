@@ -1,5 +1,6 @@
 from parcels import rng as random
 import math
+import numpy as np
 
 def periodicBC(particle, fieldset, time):
     if particle.lon < fieldset.halo_west:
@@ -7,8 +8,18 @@ def periodicBC(particle, fieldset, time):
     elif particle.lon > fieldset.halo_east:
         particle.lon -= fieldset.halo_east - fieldset.halo_west
 
+def RandomWalkSphere(particle, fieldset, time):
+    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
+    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
 
-def BrownianMotion2D_OZ(particle, fieldset, time):
+    lat_diff_coeff = math.sin(math.fabs(math.radians(particle.lat)))  # latitude
+    df = 1  # Diffussion coefficient
+    r_lat = random.uniform(-1., 1.)
+    r_lon = random.uniform(-1., 1.)
+    particle.lat += df*r_lat*lat_diff_coeff
+    particle.lon += df*r_lon*lat_diff_coeff
+
+def BrownianMotion2D(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
     Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
     r = 1/3.

@@ -3,7 +3,7 @@ import numpy as np
 from datetime import timedelta, datetime
 import time
 from os.path import join
-from kernels.wl_kernels import periodicBC, BrownianMotion2D_OZ
+from kernels.wl_kernels import periodicBC, RandomWalkSphere
 import parcels.plotting as pplt
 from parcels.scripts import *
 from utils.io_hycom import read_files
@@ -37,7 +37,6 @@ def main():
     print("Reading data.....")
     # Adding the currents field
     currents_field_set = FieldSet.from_netcdf(currents_file_names, variables, dimensions,allow_time_extrapolation=True)
-
     # -------  Adding constants for periodic halo
     currents_field_set.add_constant('halo_west', currents_field_set.U.grid.lon[0])
     currents_field_set.add_constant('halo_east', currents_field_set.U.grid.lon[-1])
@@ -57,14 +56,14 @@ def main():
     sum_field_set = FieldSet(U=currents_field_set.U + winds_field_set.U,
                              V=currents_field_set.V + winds_field_set.V)
     # -------  Making syntetic diffusion coefficient
-    U_grid = currents_field_set.U.grid
-    V_grid = currents_field_set.V.grid
-    grid_size = (U_grid.tdim, U_grid.ydim, U_grid.xdim-10)  # The -10 is for the halo
-    data = np.ones(grid_size)  # this is the coefficient
-    kh_meridional_field = Field('Kh_meridional', data, grid=U_grid)
-    kh_zonal_field = Field('Kh_zonal', data, grid=V_grid)
-    sum_field_set.add_field(kh_meridional_field)
-    sum_field_set.add_field(kh_zonal_field)
+    # U_grid = currents_field_set.U.grid
+    # grid = np.meshgrid(U_grid.lon, U_grid.lat)
+    # lat = U_grid.lat
+    # lon = U_grid.lon
+    # Getting proporcional size by degree
+    # lat_diff_coeff = np.sin(np.abs(np.deg2rad(grid[1])))  # latitude
+    # df_coeff_field = Field('diff_coeff', lat_diff_coeff, lat=lat, lon=lon)
+    # sum_field_set.add_field(df_coeff_field, 'diff_coeff')
 
 
     print("Setting up everything.....")
@@ -75,7 +74,7 @@ def main():
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
     # pset.execute(AdvectionRK4+pset.Kernel(periodicBC),
-    pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D_OZ),
+    pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
     # pset.execute(AdvectionRK4,
                  runtime=config[WorldLitter.run_time],
                  dt=timedelta(minutes=60),
