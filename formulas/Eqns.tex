@@ -1,0 +1,99 @@
+
+%This is the hello world document, it is very usefull
+%As you can see the character % is used for comments
+
+\documentclass[a4paper,12pt]{article}
+%\documentclass[doc]{apa}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[debug]{hyperref}
+\setlength\parindent{0pt}
+%\usepackage{figure}
+\usepackage[margin=0.5in]{geometry}
+
+\begin{document}
+\small
+The computation of the drif is given by:
+
+\begin{equation}
+\begin{split}
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + C_D D u_{wind}(x_i,t) + C_W u_{wave} + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\end{split}
+\end{equation}
+
+Merging waves and wind: \\
+\begin{equation}
+\begin{split}
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + C_D D u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\end{split}
+\end{equation}
+
+$C_D$ Wind drag coefficient. \\
+$D$ Rotation matrix (wind deflection).\\
+
+Merging rotation and wind coefficient
+\begin{equation}
+\begin{split}
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + \pmb{A}u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\end{split}
+\end{equation}
+
+$\pmb{A}$ obtained by the paper for open waters : 
+
+\begin{equation}
+\pmb{A} = 
+    \begin{bmatrix}
+        0.81 & -0.13 \\
+        0.06 & 0.76 \\
+    \end{bmatrix}
+\end{equation}
+
+\textbf{Pereiro formula for open waters:}
+\begin{equation}
+\begin{split}
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + \alpha(\theta) u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\end{split}
+\end{equation}
+
+$K_h  = 1 \frac{m^2}{s}$ Turbulent horizontal diffusion coefficient. \\
+$r  = 1$ Not completely sure, it suppose is related with the standard deviation of the diffusion. \\
+$R(x)$ Random number between -1 and 1 \\
+\begin{equation}
+\alpha(\theta)
+ = 
+    \begin{bmatrix}
+        0.81 \sin(\theta) & -0.13\cos(\theta) \\
+        0.06 \cos(\theta) & 0.76 \sin(\theta) \\
+    \end{bmatrix}
+\end{equation}
+Where $\theta$ is the angle of the wind vector (measured clockwise from north).\\
+
+\textbf{Our formula:}
+\begin{equation}
+\begin{split}
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\end{split}
+\end{equation}
+
+$\theta = 15$ Wind deflection angle. Rotation matrix:  
+$
+\alpha(\theta)
+ = 
+    \begin{bmatrix}
+        \sin(\theta) & -\cos(\theta) \\
+        \cos(\theta) & \sin(\theta) \\
+    \end{bmatrix}
+$
+
+$K_h  = 1 \frac{m^2}{s}$ Turbulent horizontal diffusion coefficient. \\
+$r  = 1$ Not completely sure, it suppose to be related with the standard deviation of the diffusion. \\
+$R(x)$ Random number between -x and x. \\
+$dt = 3600$ Delta t in seconds.\\
+
+
+\end{document}
+
