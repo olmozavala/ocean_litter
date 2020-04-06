@@ -46,36 +46,39 @@ def main():
         c_files.sort()
         w_files.sort()
         for c_file in c_files:
-            date_str = c_file.split("_")[3][:-2]
-            hour_str = c_file.split("_")[4].split(".")[0]
-            found = False
-            for w_file in w_files:
-                if (w_file.find(F"{date_str}") != -1) and (w_file.find(F"{hour_str}") != -1):
-                    corresponding_file = w_file
-                    found = True
-                    # TODO Remove c_file from list to make it faster
-                    break
-            if found:
-                # Merge both files
-                print(F"{c_file}")
-                c_xr = xr.open_dataset(join(c_folder, c_file))
-                w_xr = xr.open_dataset(join(w_folder, w_file))
-                u_comb, v_comb = combine_currents_winds(c_xr['surf_u'], c_xr['surf_v'],
-                                                        w_xr['uwnd'], w_xr['vwnd'],
-                                                        w_perc=w_perc, rot_matrix=rot_matrix)
-                ds = xr.Dataset(
-                    {
-                        "U_combined": (("time", "lat", "lon"), u_comb),
-                        "V_combined": (("time", "lat", "lon"), v_comb),
-                    },
-                    {"time": c_xr['time'],
-                     "lat": c_xr['lat'],
-                     "lon": c_xr['lon'],
-                     }
-                )
-                ds.to_netcdf(join(output_folder, F"Combined_{c_file}"))
-            else:
-                print(F"File not found: {c_file}")
+            try:
+                date_str = c_file.split("_")[3][:-2]
+                hour_str = c_file.split("_")[4].split(".")[0]
+                found = False
+                for w_file in w_files:
+                    if (w_file.find(F"{date_str}") != -1) and (w_file.find(F"{hour_str}") != -1):
+                        corresponding_file = w_file
+                        found = True
+                        # TODO Remove c_file from list to make it faster
+                        break
+                if found:
+                    # Merge both files
+                    print(F"{c_file}")
+                    c_xr = xr.open_dataset(join(c_folder, c_file))
+                    w_xr = xr.open_dataset(join(w_folder, w_file))
+                    u_comb, v_comb = combine_currents_winds(c_xr['surf_u'], c_xr['surf_v'],
+                                                            w_xr['uwnd'], w_xr['vwnd'],
+                                                            w_perc=w_perc, rot_matrix=rot_matrix)
+                    ds = xr.Dataset(
+                        {
+                            "U_combined": (("time", "lat", "lon"), u_comb),
+                            "V_combined": (("time", "lat", "lon"), v_comb),
+                        },
+                        {"time": c_xr['time'],
+                         "lat": c_xr['lat'],
+                         "lon": c_xr['lon'],
+                         }
+                    )
+                    ds.to_netcdf(join(output_folder, F"Combined_{c_file}"))
+                else:
+                    print(F"File not found: {c_file}")
+            except Exception as e:
+                print(F"Failed for: {c_file}")
 
 
 if __name__ == "__main__":
