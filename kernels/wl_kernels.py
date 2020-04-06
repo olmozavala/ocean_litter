@@ -12,7 +12,8 @@ def RandomWalkSphere(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
     Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
 
-    lat_diff_coeff = math.sin(math.fabs(math.radians(particle.lat)))  # latitude
+    # lat_diff_coeff = math.sin(math.fabs(math.radians(particle.lat)))  # latitude
+    lat_diff_coeff = math.sin(math.fabs(math.pi*particle.lat/180))
     df = 1  # Diffussion coefficient
     r_lat = random.uniform(-1., 1.)
     r_lon = random.uniform(-1., 1.)
