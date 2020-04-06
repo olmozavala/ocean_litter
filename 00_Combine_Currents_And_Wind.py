@@ -21,8 +21,12 @@ def combine_currents_winds(U_c, V_c, U_w, V_w, w_perc, rot_matrix):
     return np.expand_dims(U_c, axis=0), np.expand_dims(V_c, axis=0)
 
 def main():
-    input_folder = "/home/data/UN_Litter_data/HYCOM"
-    output_folder = join(input_folder, "combined")
+    # Home
+    # input_folder = "/home/data/UN_Litter_data/HYCOM"
+    # output_folder = join(input_folder, "combined")
+    # COAPS
+    input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
+    output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
     angle = np.deg2rad(.001)  # Switch to radians
     rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
                            [np.sin(angle), np.cos(angle)]])
@@ -53,7 +57,7 @@ def main():
                     break
             if found:
                 # Merge both files
-                print("Yeah babe!")
+                print(F"{c_file}")
                 c_xr = xr.open_dataset(join(c_folder, c_file))
                 w_xr = xr.open_dataset(join(w_folder, w_file))
                 u_comb, v_comb = combine_currents_winds(c_xr['surf_u'], c_xr['surf_v'],
