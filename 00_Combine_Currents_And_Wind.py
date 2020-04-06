@@ -24,9 +24,12 @@ def main():
     # Home
     # input_folder = "/home/data/UN_Litter_data/HYCOM"
     # output_folder = join(input_folder, "combined")
-    # COAPS
-    input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
-    output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
+    # COAPS My PC
+    # input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
+    # output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
+    # COAPS Compute nodes
+    input_folder = "/nexsan/people/xbxu/hycom/GLBv0.08/"
+    output_folder = "/Net/work/ozavala/CurrentsAndWinds"
     angle = np.deg2rad(.001)  # Switch to radians
     rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
                            [np.sin(angle), np.cos(angle)]])
