@@ -9,23 +9,6 @@ def periodicBC(particle, fieldset, time):
     elif particle.lon > fieldset.halo_east:
         particle.lon -= fieldset.halo_east - fieldset.halo_west
 
-def test(u_c, u_w):
-    return u_c + u_w
-
-def kernel_currents_plus_winds(particle, fieldset, time):
-
-    # ------ RungeKutta ---------
-    (u1, v1) = fieldset.UV[time, particle.depth, particle.lat, particle.lon]
-    u1 = test(u1, v1)
-    lon1, lat1 = (particle.lon + u1*.5*particle.dt, particle.lat + v1*.5*particle.dt)
-    (u2, v2) = fieldset.UV[time + .5 * particle.dt, particle.depth, lat1, lon1]
-    lon2, lat2 = (particle.lon + u2*.5*particle.dt, particle.lat + v2*.5*particle.dt)
-    (u3, v3) = fieldset.UV[time + .5 * particle.dt, particle.depth, lat2, lon2]
-    lon3, lat3 = (particle.lon + u3*particle.dt, particle.lat + v3*particle.dt)
-    (u4, v4) = fieldset.UV[time + particle.dt, particle.depth, lat3, lon3]
-    particle.lon += (u1 + 2*u2 + 2*u3 + u4) / 6. * particle.dt
-    particle.lat += (v1 + 2*v2 + 2*v3 + v4) / 6. * particle.dt
-
 def RandomWalkSphere(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
     Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
@@ -37,6 +20,17 @@ def RandomWalkSphere(particle, fieldset, time):
     r_lon = random.uniform(-1., 1.)
     particle.lat += df*r_lat*lat_diff_coeff
     particle.lon += df*r_lon*lat_diff_coeff
+
+def BrownianMotion2D_OZ(particle, fieldset, time):
+    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
+    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
+    r = 1
+    # kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
+    kh_meridional = 1
+    particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
+    # kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
+    kh_zonal = 1
+    particle.lon += random.uniform(-1., 1.) * math.sqrt(2*math.fabs(particle.dt)*kh_zonal/r)
 
 def BrownianMotion2D(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.

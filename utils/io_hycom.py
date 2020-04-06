@@ -14,3 +14,14 @@ def read_files(base_folder, years, wind=False):
 
     all_files.sort()
     return all_files
+
+def read_files_combined(base_folder, years):
+    all_files = []
+    for year in years:
+        c_year_path = join(base_folder, F'{year}')
+        files = os.listdir(c_year_path)
+        for c_file in files:
+            all_files.append(join(c_year_path, c_file))
+
+    all_files.sort()
+    return all_files

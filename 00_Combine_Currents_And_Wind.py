@@ -10,6 +10,19 @@ def all_to_rad(arr):
     return [np.deg2rad(x) for x in arr]
 
 def combine_currents_winds(U_c, V_c, U_w, V_w, LAT, w_perc, rot_matrix_nh, rot_matrix_sh):
+    """
+    This function is in charge of combining currents and winds into a single field.
+    The curreent U_combined = U + .025*winds*deflection
+    :param U_c:
+    :param V_c:
+    :param U_w:
+    :param V_w:
+    :param LAT:
+    :param w_perc:
+    :param rot_matrix_nh:
+    :param rot_matrix_sh:
+    :return:
+    """
     U_c, V_c, U_w, V_w = [x.values[0] for x in [U_c, V_c, U_w, V_w]]
     # =========== Rotating by an angle =========
     north_hem = LAT < 0
@@ -43,7 +56,7 @@ def main(proc_number):
     deg = 15
     angle = np.deg2rad(deg)  # Switch to radians
     rot_matrix_nh = np.array([[np.cos(angle), -np.sin(angle)],
-                           [np.sin(angle), np.cos(angle)]])
+                             [np.sin(angle), np.cos(angle)]])
     angle = np.deg2rad(-deg)  # Switch to radians
     rot_matrix_sh = np.array([[np.cos(angle), -np.sin(angle)],
                               [np.sin(angle), np.cos(angle)]])
@@ -51,8 +64,6 @@ def main(proc_number):
     w_perc = 2.5/100
     years = [2010]
 
-    if not(os.path.exists(output_folder)):
-        os.makedirs(output_folder)
 
     first_file = True
     # Iterate over each year
@@ -64,6 +75,9 @@ def main(proc_number):
         w_files = os.listdir(w_folder)
         c_files.sort()
         w_files.sort()
+        output_folder_year = join(output_folder,F"{year}")
+        if not(os.path.exists(output_folder_year)):
+            os.makedirs(output_folder_year)
         for ii, c_file in enumerate(c_files):
             if (ii % NUMBER_PROC) == proc_number:
                 try:
@@ -95,6 +109,21 @@ def main(proc_number):
                                                                 w_perc=w_perc,
                                                                 rot_matrix_nh=rot_matrix_nh,
                                                                 rot_matrix_sh = rot_matrix_sh)
+
+                        # For visualization purposes
+                        from img_viz.eoa_viz import EOAImageVisualizer
+                        viz_obj = EOAImageVisualizer(disp_images=False)
+                        viz_obj.plot_3d_data_np([c_xr['surf_u'], w_xr['uwnd'], u_comb],
+                                                var_names=['U_original', 'U_wind', 'U_combined'],
+                                                z_levels=[0], title=F'U',
+                                                file_name_prefix=F'U_{c_file}',
+                                                flip_data=True)
+
+                        viz_obj.plot_3d_data_np([c_xr['surf_v'], w_xr['vwnd'], v_comb],
+                                                var_names=['V_original', 'V_wind', 'V_combined'],
+                                                file_name_prefix=F'V_{c_file}',
+                                                z_levels=[0], title=F'V', flip_data=True)
+
                         ds = xr.Dataset(
                             {
                                 "U_combined": (("time", "lat", "lon"), u_comb),
@@ -105,15 +134,17 @@ def main(proc_number):
                              "lon": c_xr['lon'],
                              }
                         )
-                        ds.to_netcdf(join(output_folder, F"{output_name}_{c_file}"))
+                        ds.to_netcdf(join(output_folder_year, F"{output_name}_{c_file}"))
                     else:
                         print(F"File not found: {c_file}")
 
                 except Exception as e:
-                    print(F"Failed for: {c_file}")
+                    print(F"Failed for: {c_file} error: {e}")
 
 
 if __name__ == "__main__":
     p = Pool(NUMBER_PROC)
     p.map(main, range(NUMBER_PROC))
     print("Done!")
+##
+#
