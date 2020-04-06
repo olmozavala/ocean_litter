@@ -80,7 +80,7 @@ def main(proc_number):
 
                     if found:
                         # Merge both files
-                        print(F"{c_file}")
+                        print(F"{c_file}", flush=True)
                         c_xr = xr.open_dataset(join(c_folder, c_file))
                         w_xr = xr.open_dataset(join(w_folder, w_file))
                         if first_file:
