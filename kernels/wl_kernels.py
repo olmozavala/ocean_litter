@@ -27,10 +27,10 @@ def BrownianMotion2D_OZ(particle, fieldset, time):
     r = 1
     # kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
     kh_meridional = 1
-    particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
+    particle.lat += random.uniform(-1., 1.) * math.sqrt(2 *kh_meridional / (particle.dt *r))
     # kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
     kh_zonal = 1
-    particle.lon += random.uniform(-1., 1.) * math.sqrt(2*math.fabs(particle.dt)*kh_zonal/r)
+    particle.lon += random.uniform(-1., 1.) * math.sqrt(2 * kh_zonal / (particle.dt *r))
 
 def BrownianMotion2D(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.

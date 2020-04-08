@@ -80,66 +80,70 @@ def main(proc_number):
             os.makedirs(output_folder_year)
         for ii, c_file in enumerate(c_files):
             if (ii % NUMBER_PROC) == proc_number:
-                try:
-                    date_str = c_file.split("_")[3][:-2]
-                    hour_str = c_file.split("_")[4].split(".")[0]
-                    found = False
+                # try:
+                date_str = c_file.split("_")[3][:-2]
+                month = date_str[4:6]
+                print(month)
+                hour_str = c_file.split("_")[4].split(".")[0]
+                found = False
 
-                    for w_file in w_files:
-                        if (w_file.find(F"{date_str}") != -1) and (w_file.find(F"{hour_str}") != -1):
-                            corresponding_file = w_file
-                            found = True
-                            # TODO Remove c_file from list to make it faster
-                            break
+                for w_file in w_files:
+                    if (w_file.find(F"{date_str}") != -1) and (w_file.find(F"{hour_str}") != -1):
+                        corresponding_file = w_file
+                        found = True
+                        # TODO Remove c_file from list to make it faster
+                        break
 
-                    if found:
-                        # Merge both files
-                        print(F"{c_file}", flush=True)
-                        c_xr = xr.open_dataset(join(c_folder, c_file))
-                        w_xr = xr.open_dataset(join(w_folder, w_file))
-                        if first_file:
-                            lat = c_xr['latitude']
-                            lon = c_xr['longitude']
-                            LAT = np.meshgrid(lon,lat)[1].flatten()
-                            first_file = False
+                if found:
+                    # Merge both files
+                    print(F"{c_file}", flush=True)
+                    c_xr = xr.open_dataset(join(c_folder, c_file))
+                    w_xr = xr.open_dataset(join(w_folder, w_file))
+                    if first_file:
+                        lat = c_xr['latitude']
+                        lon = c_xr['longitude']
+                        LAT = np.meshgrid(lon,lat)[1].flatten()
+                        first_file = False
 
-                        u_comb, v_comb = combine_currents_winds(c_xr['surf_u'], c_xr['surf_v'],
-                                                                w_xr['uwnd'], w_xr['vwnd'],
-                                                                LAT=LAT,
-                                                                w_perc=w_perc,
-                                                                rot_matrix_nh=rot_matrix_nh,
-                                                                rot_matrix_sh = rot_matrix_sh)
+                    u_comb, v_comb = combine_currents_winds(c_xr['surf_u'], c_xr['surf_v'],
+                                                            w_xr['uwnd'], w_xr['vwnd'],
+                                                            LAT=LAT,
+                                                            w_perc=w_perc,
+                                                            rot_matrix_nh=rot_matrix_nh,
+                                                            rot_matrix_sh = rot_matrix_sh)
 
-                        # For visualization purposes
-                        from img_viz.eoa_viz import EOAImageVisualizer
-                        viz_obj = EOAImageVisualizer(disp_images=False)
-                        viz_obj.plot_3d_data_np([c_xr['surf_u'], w_xr['uwnd'], u_comb],
-                                                var_names=['U_original', 'U_wind', 'U_combined'],
-                                                z_levels=[0], title=F'U',
-                                                file_name_prefix=F'U_{c_file}',
-                                                flip_data=True)
+                    # For visualization purposes
+                    # from img_viz.eoa_viz import EOAImageVisualizer
+                    # mincbar = np.amin(u_comb)
+                    # maxcbar = np.amax(u_comb)
+                    # viz_obj = EOAImageVisualizer(disp_images=False, mincbar=mincbar, maxcbar=maxcbar)
+                    # viz_obj.plot_3d_data_np([c_xr['surf_u'], w_xr['uwnd'], u_comb],
+                    #                         var_names=['U_original', 'U_wind', 'U_combined'],
+                    #                         z_levels=[0], title=F'U',
+                    #                         file_name_prefix=F'U_{c_file}',
+                    #                         flip_data=True)
+                    #
+                    # viz_obj.plot_3d_data_np([c_xr['surf_v'], w_xr['vwnd'], v_comb],
+                    #                         var_names=['V_original', 'V_wind', 'V_combined'],
+                    #                         file_name_prefix=F'V_{c_file}',
+                    #                         z_levels=[0], title=F'V', flip_data=True)
 
-                        viz_obj.plot_3d_data_np([c_xr['surf_v'], w_xr['vwnd'], v_comb],
-                                                var_names=['V_original', 'V_wind', 'V_combined'],
-                                                file_name_prefix=F'V_{c_file}',
-                                                z_levels=[0], title=F'V', flip_data=True)
+                    ds = xr.Dataset(
+                        {
+                            "U_combined": (("time", "lat", "lon"), u_comb),
+                            "V_combined": (("time", "lat", "lon"), v_comb),
+                        },
+                        {"time": c_xr['time'],
+                         "lat": c_xr['lat'],
+                         "lon": c_xr['lon'],
+                         }
+                    )
+                    ds.to_netcdf(join(output_folder_year, F"{output_name}_{c_file}"))
+                else:
+                    print(F"File not found: {c_file}")
 
-                        ds = xr.Dataset(
-                            {
-                                "U_combined": (("time", "lat", "lon"), u_comb),
-                                "V_combined": (("time", "lat", "lon"), v_comb),
-                            },
-                            {"time": c_xr['time'],
-                             "lat": c_xr['lat'],
-                             "lon": c_xr['lon'],
-                             }
-                        )
-                        ds.to_netcdf(join(output_folder_year, F"{output_name}_{c_file}"))
-                    else:
-                        print(F"File not found: {c_file}")
-
-                except Exception as e:
-                    print(F"Failed for: {c_file} error: {e}")
+                # except Exception as e:
+                #     print(F"Failed for: {c_file} error: {e}")
 
 
 if __name__ == "__main__":

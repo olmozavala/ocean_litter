@@ -21,14 +21,14 @@ The computation of the drif is given by:
 
 \begin{equation}
 \begin{split}
-\frac{dx_i}{dt} = u_{sea}(x_i, t) + C_D D u_{wind}(x_i,t) + C_W u_{wave} + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + C_D D u_{wind}(x_i,t) + C_W u_{wave} + R \sqrt{\frac{2K_h}{r dt}} 
 \end{split}
 \end{equation}
 
 Merging waves and wind: \\
 \begin{equation}
 \begin{split}
-\frac{dx_i}{dt} = u_{sea}(x_i, t) + C_D D u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + C_D D u_{wind}(x_i,t) + R \sqrt{\frac{2K_h}{r dt}} 
 \end{split}
 \end{equation}
 
@@ -38,7 +38,7 @@ $D$ Rotation matrix (wind deflection).\\
 Merging rotation and wind coefficient
 \begin{equation}
 \begin{split}
-\frac{dx_i}{dt} = u_{sea}(x_i, t) + \pmb{A}u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + \pmb{A}u_{wind}(x_i,t) + R \sqrt{\frac{2K_h}{r dt}} 
 \end{split}
 \end{equation}
 
@@ -55,7 +55,7 @@ $\pmb{A}$ obtained by the paper for open waters :
 \textbf{Pereiro formula for open waters:}
 \begin{equation}
 \begin{split}
-\frac{dx_i}{dt} = u_{sea}(x_i, t) + \alpha(\theta) u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + \alpha(\theta) u_{wind}(x_i,t) + R \sqrt{\frac{2K_h}{r dt}} 
 \end{split}
 \end{equation}
 
@@ -75,7 +75,7 @@ Where $\theta$ is the angle of the wind vector (measured clockwise from north).\
 \textbf{Our formula:}
 \begin{equation}
 \begin{split}
-\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \left (\sqrt{\frac{2K_h}{r dt}} \right)
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \sqrt{\frac{2K_h}{r dt}} 
 \end{split}
 \end{equation}
 
