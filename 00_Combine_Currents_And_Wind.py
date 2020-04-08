@@ -43,13 +43,15 @@ def combine_currents_winds(U_c, V_c, U_w, V_w, LAT, w_perc, rot_matrix_nh, rot_m
     return np.expand_dims(U_c, axis=0), np.expand_dims(V_c, axis=0)
 
 def main(proc_number):
-    # Home
-    #input_folder = "/home/data/UN_Litter_data/HYCOM"
-    #output_folder = join(input_folder, "combined")
     output_name = "Winds_25p_def_15deg"
-    # COAPS My PC
-    input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
-    output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
+
+    # -------- Home ---------------
+    input_folder = "/home/data/UN_Litter_data/HYCOM"
+    output_folder = join(input_folder, "combined")
+
+    # -------------- COAPS My PC --------------
+    # input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
+    # output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
     # COAPS Compute nodes
     # input_folder = "/nexsan/people/xbxu/hycom/GLBv0.08/"
     # output_folder = "/Net/work/ozavala/CurrentsAndWinds"
@@ -62,7 +64,7 @@ def main(proc_number):
                               [np.sin(angle), np.cos(angle)]])
 
     w_perc = 2.5/100
-    years = np.arange(2010, 2016)
+    years = np.arange(2010, 2011)
 
     first_file = True
     # Iterate over each year
@@ -137,8 +139,8 @@ def main(proc_number):
                             "V_combined": (("time", "lat", "lon"), v_comb),
                         },
                         {"time": c_xr['time'],
-                         "lat": c_xr['lat'],
-                         "lon": c_xr['lon'],
+                         "lat": lat,
+                         "lon": lon,
                          }
                     )
                     ds.to_netcdf(join(output_folder_year, F"{output_name}_{c_file}"))

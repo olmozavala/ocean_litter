@@ -1,4 +1,4 @@
-from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, AdvectionRK4, plotTrajectoriesFile
+from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, ScipyParticle, AdvectionRK4, plotTrajectoriesFile
 import numpy as np
 from datetime import timedelta, datetime
 import time
@@ -21,6 +21,7 @@ def main():
     output_file = join(config[WorldLitter.output_folder], config[WorldLitter.output_file])
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
+    dt = config[WorldLitter.dt]
 
     file_names = read_files(base_folder, years)
 
@@ -28,11 +29,11 @@ def main():
     lat0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lon0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
-    variables = {'U': 'surf_u',
-                 'V': 'surf_v'}
+    variables = {'U': 'U_combined',
+                 'V': 'V_combined'}
 
-    dimensions = {'lat': 'latitude',
-                  'lon': 'longitude',
+    dimensions = {'lat': 'lat',
+                  'lon': 'lon',
                   'time': 'time'}
 
     print("Reading data.....")
@@ -56,7 +57,7 @@ def main():
     # winds_currents_fieldset.add_field(df_coeff_field, 'diff_coeff')
 
     print("Setting up everything.....")
-    pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0,
+    pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=ScipyParticle, lon=lon0, lat=lat0,
                        repeatdt=timedelta(days=61))
 
     print("Running.....")
@@ -65,11 +66,11 @@ def main():
     # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
     # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
     # pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D_OZ),
-    pset.execute(AdvectionRK4,
+    pset.execute(pset.Kernel(AdvectionRK4) + pset.Kernel(BrownianMotion2D_OZ),
                  runtime=config[WorldLitter.run_time],
-                 dt=timedelta(minutes=60),
+                 dt=timedelta(seconds=dt),
                  output_file=out_parc_file)
-    # pset.execute(AdvectionRK4 + BrownianMotion2D_OZ,
+    # pset.execute(pset.Kernel(AdvectionRK4) + pset.Kernel(BrownianMotion2D_OZ),
     #              runtime=timedelta(hours=6),
     #              dt=timedelta(minutes=60),
     #              output_file=out_parc_file)

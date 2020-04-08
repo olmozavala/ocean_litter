@@ -21,17 +21,6 @@ def RandomWalkSphere(particle, fieldset, time):
     particle.lat += df*r_lat*lat_diff_coeff
     particle.lon += df*r_lon*lat_diff_coeff
 
-def BrownianMotion2D_OZ(particle, fieldset, time):
-    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
-    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
-    r = 1
-    # kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
-    kh_meridional = 1
-    particle.lat += random.uniform(-1., 1.) * math.sqrt(2 *kh_meridional / (particle.dt *r))
-    # kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
-    kh_zonal = 1
-    particle.lon += random.uniform(-1., 1.) * math.sqrt(2 * kh_zonal / (particle.dt *r))
-
 def BrownianMotion2D(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
     Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
@@ -39,6 +28,17 @@ def BrownianMotion2D(particle, fieldset, time):
     kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
     particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
     kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
+    particle.lon += random.uniform(-1., 1.) * math.sqrt(2*math.fabs(particle.dt)*kh_zonal/r)
+
+def BrownianMotion2D_OZ(particle, fieldset, time):
+    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
+    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
+    r = 1/3.
+    # kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
+    kh_meridional = 1
+    particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
+    # kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
+    kh_zonal = 1
     particle.lon += random.uniform(-1., 1.) * math.sqrt(2*math.fabs(particle.dt)*kh_zonal/r)
 
 # def BrownianMotion2D_OZ(particle, fieldset, time):

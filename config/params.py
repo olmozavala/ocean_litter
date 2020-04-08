@@ -14,6 +14,7 @@ class WorldLitter(Enum):
     run_time = 10
     output_folder_web = 11
     countries_file = 12
+    dt = 13
 
 
 class DataCols(Enum):
