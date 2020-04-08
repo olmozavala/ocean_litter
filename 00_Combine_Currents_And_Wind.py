@@ -4,7 +4,7 @@ import numpy as np
 import os
 from multiprocessing import Pool
 
-NUMBER_PROC = 2
+NUMBER_PROC = 5
 
 def all_to_rad(arr):
     return [np.deg2rad(x) for x in arr]
@@ -31,12 +31,12 @@ def combine_currents_winds(U_c, V_c, U_w, V_w, LAT, w_perc, rot_matrix_nh, rot_m
 
 def main(proc_number):
     # Home
-    input_folder = "/home/data/UN_Litter_data/HYCOM"
-    output_folder = join(input_folder, "combined")
+    #input_folder = "/home/data/UN_Litter_data/HYCOM"
+    #output_folder = join(input_folder, "combined")
     output_name = "Winds_25p_def_15deg"
     # COAPS My PC
-    # input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
-    # output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
+    input_folder = "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/"
+    output_folder = "/data/COAPS_Net/work/ozavala/CurrentsAndWinds"
     # COAPS Compute nodes
     # input_folder = "/nexsan/people/xbxu/hycom/GLBv0.08/"
     # output_folder = "/Net/work/ozavala/CurrentsAndWinds"
@@ -49,14 +49,15 @@ def main(proc_number):
                               [np.sin(angle), np.cos(angle)]])
 
     w_perc = 2.5/100
-    years = [2010]
-
-    if not(os.path.exists(output_folder)):
-        os.makedirs(output_folder)
+    years = [2011, 2012, 2013, 2014, 2015]
 
     first_file = True
     # Iterate over each year
     for year in years:
+        c_output_folder = join(output_folder, F"{year}")
+        if not(os.path.exists(c_output_folder)):
+            os.makedirs(c_output_folder)
+
         # Obtain currents and winds files
         c_folder = join(input_folder, F"{year}")
         w_folder = join(input_folder, F"{year}w")
@@ -105,7 +106,7 @@ def main(proc_number):
                              "lon": c_xr['lon'],
                              }
                         )
-                        ds.to_netcdf(join(output_folder, F"{output_name}_{c_file}"))
+                        ds.to_netcdf(join(c_output_folder, F"{output_name}_{c_file}"))
                     else:
                         print(F"File not found: {c_file}")
 
