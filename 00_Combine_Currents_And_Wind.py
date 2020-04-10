@@ -144,6 +144,9 @@ def main(proc_number):
                          }
                     )
                     ds.to_netcdf(join(output_folder_year, F"{output_name}_{c_file}"))
+                    c_xr.close()
+                    w_xr.close()
+                    ds.close()
                 else:
                     print(F"File not found: {c_file}")
 

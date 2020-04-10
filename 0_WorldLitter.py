@@ -3,7 +3,7 @@ import numpy as np
 from datetime import timedelta, datetime
 import time
 from os.path import join
-from kernels.wl_kernels import periodicBC, RandomWalkSphere, BrownianMotion2D_OZ
+from kernels.wl_kernels import periodicBC, RandomWalkSphere, BrownianMotion2D, EricSolution, BrownianMotion2D
 import parcels.plotting as pplt
 from parcels.scripts import *
 from utils.io_hycom import read_files
@@ -12,7 +12,6 @@ import functools
 from config.params import WorldLitter
 from config.MainConfig import get_op_config
 
-wind_factor = .035
 def main():
     config = get_op_config()
     years = config[WorldLitter.years]
@@ -22,6 +21,8 @@ def main():
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
     dt = config[WorldLitter.dt]
+    kh = 1
+    repeat_release = config[WorldLitter.repeat_release]
 
     file_names = read_files(base_folder, years)
 
@@ -36,6 +37,7 @@ def main():
                   'lon': 'lon',
                   'time': 'time'}
 
+    print("Making Kh.....")
     print("Reading data.....")
     # Adding the currents field
     winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
@@ -47,33 +49,41 @@ def main():
     winds_currents_fieldset.add_periodic_halo(zonal=True)                                   #create a zonal halo
 
     # -------  Making syntetic diffusion coefficient
-    # U_grid = winds_currents_fieldset.U.grid
-    # grid = np.meshgrid(U_grid.lon, U_grid.lat)
-    # lat = U_grid.lat
-    # lon = U_grid.lon
-    # # Getting proporcional size by degree
-    # lat_diff_coeff = np.sin(np.abs(np.deg2rad(grid[1])))  # latitude
-    # df_coeff_field = Field('diff_coeff', lat_diff_coeff, lat=lat, lon=lon)
-    # winds_currents_fieldset.add_field(df_coeff_field, 'diff_coeff')
+    U_grid = winds_currents_fieldset.U.grid
+    grid = np.meshgrid(U_grid.lon, U_grid.lat)
+    lat = U_grid.lat
+    lon = U_grid.lon
+    # Getting proporcional size by degree
+
+    kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
+                   lon=lon, lat=lat, allow_time_extrapolation=True,
+                   fieldtype='Kh_meridional', mesh='spherical')
+    kh_zonal = Field('Kh_zonal', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
+                   lon=lon, lat=lat, allow_time_extrapolation=True,
+                   fieldtype='Kh_zonal', mesh='spherical')
+
+    winds_currents_fieldset.add_field(kh_mer, 'Kh_meridional')
+    winds_currents_fieldset.add_field(kh_zonal, 'Kh_zonal')
 
     print("Setting up everything.....")
-    pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=ScipyParticle, lon=lon0, lat=lat0,
-                       repeatdt=timedelta(days=61))
+    if repeat_release:
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=ScipyParticle, lon=lon0, lat=lat0,
+                           repeatdt=repeat_release)
+    else:
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=ScipyParticle, lon=lon0, lat=lat0)
 
     print("Running.....")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
+    # pset.execute(AdvectionRK4,
     # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
+    # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
+    # pset.execute(AdvectionRK4 + pset.Kernel(EricSolution),
     # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
-    # pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D_OZ),
-    pset.execute(pset.Kernel(AdvectionRK4) + pset.Kernel(BrownianMotion2D_OZ),
-                 runtime=config[WorldLitter.run_time],
-                 dt=timedelta(seconds=dt),
+    pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D),
+                runtime=config[WorldLitter.run_time],
+                 dt=dt,
                  output_file=out_parc_file)
-    # pset.execute(pset.Kernel(AdvectionRK4) + pset.Kernel(BrownianMotion2D_OZ),
-    #              runtime=timedelta(hours=6),
-    #              dt=timedelta(minutes=60),
-    #              output_file=out_parc_file)
 
     print(F"Done time={time.time()-t}.....")
 

@@ -17,6 +17,15 @@
 
 \begin{document}
 \small
+Some info (Coastal exposure\dots):
+\begin{figure}[h]
+    \centering
+    \includegraphics[totalheight=.10\textheight]{1.png}
+    \caption{ }
+    \label{fig:mobile1}
+\end{figure}
+
+
 The computation of the drif is given by:
 
 \begin{equation}
@@ -75,7 +84,9 @@ Where $\theta$ is the angle of the wind vector (measured clockwise from north).\
 \textbf{Our formula:}
 \begin{equation}
 \begin{split}
-\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \sqrt{\frac{2K_h}{r dt}} 
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \sqrt{\frac{2K_h (\frac{m^2}{s})}{r dt (s)}} \\
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \sqrt{\frac{2(1) (\frac{m^2}{s})}{1 dt (s)}} \\
+\frac{dx_i}{dt} = u_{sea}(x_i, t) + .025 \alpha(\theta) u_{wind}(x_i,t) + R \sqrt{\frac{2K_h dt (\frac{m^2}{s})}{(1/3) }} 
 \end{split}
 \end{equation}
 
