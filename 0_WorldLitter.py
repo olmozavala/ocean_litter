@@ -43,9 +43,7 @@ def main():
 
     print("Reading data.....")
     # Adding the currents field
-    winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
-                                                   allow_time_extrapolation=True)
-
+    winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions, allow_time_extrapolation=True)
     # -------  Adding constants for periodic halo
     winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
     winds_currents_fieldset.add_constant('halo_east', winds_currents_fieldset.U.grid.lon[-1])
@@ -70,10 +68,10 @@ def main():
 
     print("Setting up everything.....")
     if repeat_release:
-        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=ScipyParticle, lon=lon0, lat=lat0,
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0,
                            repeatdt=repeat_release)
     else:
-        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=ScipyParticle, lon=lon0, lat=lat0)
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0)
 
     print("Running.....")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
