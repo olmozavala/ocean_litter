@@ -30,14 +30,17 @@ def main():
     lat0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lon0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
-    variables = {'U': 'U_combined',
-                 'V': 'V_combined'}
+    #variables = {'U': 'U_combined',
+                 #'V': 'V_combined'}
+    variables = {'U': 'surf_u',
+                 'V': 'surf_v'}
 
-    dimensions = {'lat': 'lat',
-                  'lon': 'lon',
+    #dimensions = {'lat': 'lat',
+                  #'lon': 'lon',
+    dimensions = {'lat': 'latitude',
+                  'lon': 'longitude',
                   'time': 'time'}
 
-    print("Making Kh.....")
     print("Reading data.....")
     # Adding the currents field
     winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
@@ -50,11 +53,11 @@ def main():
 
     # -------  Making syntetic diffusion coefficient
     U_grid = winds_currents_fieldset.U.grid
-    grid = np.meshgrid(U_grid.lon, U_grid.lat)
     lat = U_grid.lat
     lon = U_grid.lon
     # Getting proporcional size by degree
 
+    print("Making Kh.....")
     kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
                    lon=lon, lat=lat, allow_time_extrapolation=True,
                    fieldtype='Kh_meridional', mesh='spherical')
