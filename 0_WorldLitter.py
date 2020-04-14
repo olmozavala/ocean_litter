@@ -1,6 +1,6 @@
 from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, ScipyParticle, AdvectionRK4, plotTrajectoriesFile
 import numpy as np
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 import time
 from os.path import join
 from kernels.wl_kernels import periodicBC, RandomWalkSphere, BrownianMotion2D, EricSolution, BrownianMotion2D
@@ -11,19 +11,21 @@ import os
 import functools
 from config.params import WorldLitter
 from config.MainConfig import get_op_config
+import sys
 
-def main():
+def main(start_date = -1):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]
     output_file = join(config[WorldLitter.output_folder], config[WorldLitter.output_file])
-    start_date = config[WorldLitter.start_date]
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
     dt = config[WorldLitter.dt]
     kh = 1
     repeat_release = config[WorldLitter.repeat_release]
+    if start_date == -1:
+        start_date = config[WorldLitter.start_date]
 
     file_names = read_files(base_folder, years, wind=False, start_date=start_date)
     if len(file_names) == 0:
@@ -99,4 +101,9 @@ def main():
     # plotTrajectoriesFile(output_file) # Plotting trajectories
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%M-%d").date()
+        main(start_date)
+    else:
+        main()
+
