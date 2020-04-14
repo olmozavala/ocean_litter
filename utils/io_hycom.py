@@ -1,8 +1,8 @@
 import os
 from os.path import join
-from datetime import date
+from datetime import datetime
 
-def read_files(base_folder, years, wind=False, start_date=0):
+def read_files(base_folder, years, wind=False, start_date=0, end_date=0):
     all_files = []
     for year in years:
         if wind:
@@ -16,10 +16,14 @@ def read_files(base_folder, years, wind=False, start_date=0):
         else:
             final_files = []
             ds = [x.split('_')[3] for x in files]
-            all_dates = [date(int(x[0:4]), int(x[4:6]), int(x[6:8])) for x in ds]
+            all_dates = [datetime(int(x[0:4]), int(x[4:6]), int(x[6:8]) ) for x in ds]
             for i, c_date in enumerate(all_dates):
-                if c_date >= start_date:
-                    final_files.append(files[i])
+                if end_date != 0:
+                    if start_date <= c_date <= end_date:
+                        final_files.append(files[i])
+                else:
+                    if c_date >= start_date:
+                        final_files.append(files[i])
 
         for c_file in final_files:
             all_files.append(join(c_year_path, c_file))

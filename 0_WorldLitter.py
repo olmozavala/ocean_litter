@@ -13,7 +13,7 @@ from config.params import WorldLitter
 from config.MainConfig import get_op_config
 import sys
 
-def main(start_date = -1):
+def main(start_date = -1, end_date = -1):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
@@ -26,8 +26,11 @@ def main(start_date = -1):
     repeat_release = config[WorldLitter.repeat_release]
     if start_date == -1:
         start_date = config[WorldLitter.start_date]
+    if end_date == -1:
+        end_date = config[WorldLitter.end_date]
+    run_time = timedelta(seconds=(end_date - start_date).total_seconds())
 
-    file_names = read_files(base_folder, years, wind=False, start_date=start_date)
+    file_names = read_files(base_folder, years, wind=False, start_date=start_date, end_date=end_date)
     if len(file_names) == 0:
         print("ERROR: We couldn't read any file!")
         return 0
@@ -87,8 +90,9 @@ def main(start_date = -1):
     # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
     # pset.execute(AdvectionRK4 + pset.Kernel(EricSolution),
     # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
+    print(F"Running for {run_time} hour")
     pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D),
-                runtime=config[WorldLitter.run_time],
+                runtime=run_time,
                  dt=dt,
                  output_file=out_parc_file)
 
@@ -101,9 +105,14 @@ def main(start_date = -1):
     # plotTrajectoriesFile(output_file) # Plotting trajectories
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        start_date = datetime.strptime(sys.argv[1], "%Y-%M-%d").date()
-        main(start_date)
+    if len(sys.argv) == 2:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
+        main(start_date=start_date)
+    elif len(sys.argv) == 3:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
+        end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
+        print(F"Start date: {start_date} End date: {end_date}")
+        main(start_date, end_date)
     else:
         main()
 
