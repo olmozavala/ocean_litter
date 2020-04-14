@@ -18,13 +18,17 @@ def main():
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]
     output_file = join(config[WorldLitter.output_folder], config[WorldLitter.output_file])
+    start_date = config[WorldLitter.start_date]
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
     dt = config[WorldLitter.dt]
     kh = 1
     repeat_release = config[WorldLitter.repeat_release]
 
-    file_names = read_files(base_folder, years)
+    file_names = read_files(base_folder, years, wind=False, start_date=start_date)
+    if len(file_names) == 0:
+        print("ERROR: We couldn't read any file!")
+        return 0
 
     print("Reading initial positions.....")
     lat0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
