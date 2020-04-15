@@ -13,12 +13,12 @@ from config.params import WorldLitter
 from config.MainConfig import get_op_config
 import sys
 
-def main(start_date = -1, end_date = -1):
+def main(start_date = -1, end_date = -1, name=''):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]
-    output_file = join(config[WorldLitter.output_folder], config[WorldLitter.output_file])
+    output_file = join(config[WorldLitter.output_folder], F"{name}_{config[WorldLitter.output_file]}")
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
     dt = config[WorldLitter.dt]
@@ -113,6 +113,12 @@ if __name__ == "__main__":
         end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
         print(F"Start date: {start_date} End date: {end_date}")
         main(start_date, end_date)
+    elif len(sys.argv) == 4:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
+        end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
+        name = sys.argv[3]
+        print(F"Start date: {start_date} End date: {end_date}")
+        main(start_date, end_date, name)
     else:
         main()
 
