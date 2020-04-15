@@ -1,6 +1,6 @@
 from config.params import WorldLitter
 import numpy as np
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime
 
 # today_str = datetime.today().strftime("%Y-%m-%d_%H_%M")
 today_str = "2020-04-02_19_15"
@@ -13,11 +13,10 @@ def get_op_config():
         WorldLitter.output_file: F"{today_str}_output.nc",
         WorldLitter.lat_files: ["coasts_all_y.csv", "rivers_all_y.csv"],
         WorldLitter.lon_files: ["coasts_all_x.csv", "rivers_all_x.csv"],
-        WorldLitter.start_date: date(2010, 4, 1),
+        WorldLitter.start_date: datetime(2010, 1, 1, 0, 0),
+        WorldLitter.end_date: datetime(2010, 1, 2, 0, 0),
         # lat_files = ["river_cat_1_x.csv"]
         # lon_files = ["river_cat_1_y.csv"]
-        WorldLitter.wind_factor: 0.035,
-        WorldLitter.run_time: timedelta(hours=2),   # 365
         WorldLitter.repeat_release: timedelta(minutes=60),  # 61
         WorldLitter.output_freq: timedelta(hours=1),  # 24
 

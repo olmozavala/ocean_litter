@@ -52,7 +52,8 @@ def main(start_date = -1, end_date = -1, name=''):
 
     print("Reading data.....")
     # Adding the currents field
-    winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions, allow_time_extrapolation=True)
+    winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
+                                                   allow_time_extrapolation=True)
     # -------  Adding constants for periodic halo
     winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
     winds_currents_fieldset.add_constant('halo_east', winds_currents_fieldset.U.grid.lon[-1])
