@@ -48,12 +48,17 @@ def main(start_date = -1, end_date = -1, name=''):
 
     print("Reading data.....")
     # Adding the currents field
-    chunk_sizes = [128, 256, 512, 1024, 2048]
+    chunk_sizes = [False, 'auto', 128, 256, 512, 1024, 2048]
     for chunk_size in chunk_sizes:
-        cs = (chunk_size, chunk_size)
-        winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
-                                                       allow_time_extrapolation=True,
-                                                       field_chunksize=cs)
+        if chunk_size not in ['auto', False]:
+            cs = (chunk_size, chunk_size)
+            winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
+                                                           allow_time_extrapolation=True,
+                                                           field_chunksize=cs)
+        else:
+            winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
+                                                           allow_time_extrapolation=True,
+                                                           field_chunksize=chunk_size)
 
         # -------  Adding constants for periodic halo
         winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
@@ -107,5 +112,20 @@ def main(start_date = -1, end_date = -1, name=''):
         # plotTrajectoriesFile(output_file) # Plotting trajectories
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 2:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
+        main(start_date=start_date)
+    elif len(sys.argv) == 3:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
+        end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
+        print(F"Start date: {start_date} End date: {end_date}")
+        main(start_date, end_date)
+    elif len(sys.argv) == 4:
+        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
+        end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
+        name = sys.argv[3]
+        print(F"Start date: {start_date} End date: {end_date}")
+        main(start_date, end_date, name)
+    else:
+        main()
 
