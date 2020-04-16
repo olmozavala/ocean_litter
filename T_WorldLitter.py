@@ -8,6 +8,8 @@ from utils.io_hycom import read_files
 import functools
 from config.params import WorldLitter
 from config.MainConfig import get_op_config
+import sys
+from netCDF4 import Dataset
 
 def main(start_date = -1, end_date = -1, name=''):
     config = get_op_config()
@@ -48,6 +50,7 @@ def main(start_date = -1, end_date = -1, name=''):
 
     print("Reading data.....")
     # Adding the currents field
+    # chunk_sizes = [False, 'auto', 128, 256, 512, 1024, 2048]
     chunk_sizes = [False, 'auto', 128, 256, 512, 1024, 2048]
     for chunk_size in chunk_sizes:
         if chunk_size not in ['auto', False]:
@@ -99,17 +102,11 @@ def main(start_date = -1, end_date = -1, name=''):
         # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
         print(F"Running for {run_time} hour")
         pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D),
-                    runtime=run_time,
-                     dt=dt,
+                    runtime=run_time, dt=dt,
                      output_file=out_parc_file)
 
-        print(F"Done time={time.time()-t} ChunkSize: {chunk_size}")
-
-        print("Plotting output........")
-        # domain = {'N': 31, 'S': 16, 'E': -76, 'W': -98}
-        # pset.show(field=winds_currents_fieldset.U, domain=domain)  # Draw current particles
-        out_parc_file.export() # Save trajectories to file
-        # plotTrajectoriesFile(output_file) # Plotting trajectories
+        print(F"####### Done time={time.time()-t} ChunkSize: {chunk_size} ####### ")
+        # out_parc_file.export() # Save trajectories to file
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:

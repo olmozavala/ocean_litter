@@ -53,7 +53,8 @@ def main(start_date = -1, end_date = -1, name=''):
     print("Reading data.....")
     # Adding the currents field
     winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
-                                                   allow_time_extrapolation=True)
+                                                   allow_time_extrapolation=True,
+                                                   field_chunksize=(2048,2048))
     # -------  Adding constants for periodic halo
     winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
     winds_currents_fieldset.add_constant('halo_east', winds_currents_fieldset.U.grid.lon[-1])
@@ -99,11 +100,12 @@ def main(start_date = -1, end_date = -1, name=''):
 
     print(F"Done time={time.time()-t}.....")
 
-    print("Plotting output........")
+    print("Saving output!!!!!")
     # domain = {'N': 31, 'S': 16, 'E': -76, 'W': -98}
     # pset.show(field=winds_currents_fieldset.U, domain=domain)  # Draw current particles
     out_parc_file.export() # Save trajectories to file
     # plotTrajectoriesFile(output_file) # Plotting trajectories
+    print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!")
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
