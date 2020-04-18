@@ -17,8 +17,8 @@ file_countries = 'ne_50m_admin_0_countries.shp'
 release_loc_folder = join(data_folder,"release_locations")
 buffer_size = .2  # in degrees
 
-lat_files = ['coasts_all_y.cvs', 'rivers_all_y.cvs']
-lon_files = ['coasts_all_x.cvs', 'rivers_all_x.cvs']
+lat_files = ['coasts_all_y.csv', 'rivers_all_y.csv']
+lon_files = ['coasts_all_x.csv', 'rivers_all_x.csv']
 
 geo_countries = gpd.GeoDataFrame.from_file(input_folder+file_countries)
 geo_oceans = gpd.GeoDataFrame.from_file('/home/olmozavala/Dropbox/TestData/GIS/Shapefiles/World/oceans_oz/oceans_oz.shp')
