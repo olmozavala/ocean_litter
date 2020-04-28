@@ -27,6 +27,7 @@ def island(U, V, j, i):
         return False
 
 inc = 1
+speed = 2
 for j in range(1, U.shape[1]-2):
     if j % 100 == 0:
         print(j)
@@ -68,14 +69,14 @@ for j in range(1, U.shape[1]-2):
                 # unBeachU[j+1, i+1] += -inc
                 # unBeachV[j+1, i+1] += -inc
             vres = 1
-            unBeachV[j, i] = vres*unBeachV[j, i]/max(np.abs(unBeachV[j, i]), 1)
+            unBeachV[j, i] = speed*vres*unBeachV[j, i]/max(np.abs(unBeachV[j, i]), 1)
             # unBeachV[j+1, i+1] = vres*unBeachV[j+1, i+1]/max(np.abs(unBeachV[j+1, i+1]), 1)
             # unBeachV[j-1, i-1] = vres*unBeachV[j-1, i-1]/max(np.abs(unBeachV[j-1, i-1]), 1)
             # unBeachV[j+1, i-1] = vres*unBeachV[j+1, i-1]/max(np.abs(unBeachV[j+1, i-1]), 1)
             # unBeachV[j-1, i+1] = vres*unBeachV[j-1, i+1]/max(np.abs(unBeachV[j-1, i+1]), 1)
 
             ures = 1
-            unBeachU[j, i] = ures*unBeachU[j, i]/max(np.abs(unBeachU[j, i]), 1)
+            unBeachU[j, i] = speed*ures*unBeachU[j, i]/max(np.abs(unBeachU[j, i]), 1)
             # unBeachU[j+1, i+1] = ures*unBeachU[j+1, i+1]/max(np.abs(unBeachU[j+1, i+1]), 1)
             # unBeachU[j-1, i-1] = ures*unBeachU[j-1, i-1]/max(np.abs(unBeachU[j-1, i-1]), 1)
             # unBeachU[j+1, i-1] = ures*unBeachU[j+1, i-1]/max(np.abs(unBeachU[j+1, i-1]), 1)

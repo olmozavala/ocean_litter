@@ -18,29 +18,38 @@ def outOfBounds(particle, fieldset, time):
     particle.beached = 2
 
 
-class PlasticParticle(ScipyParticle):
+class PlasticParticle(JITParticle):
     # age = Variable('age', dtype=np.float32, initial=0.)
     # beached : 0 sea, 1 beached,  2  please unbeach
     beached = Variable('beached', dtype=np.int32, initial=0.)
 
-
-def set_unbeaching(fieldset):
-
-    input_file = '/home/data/UN_Litter_data/HYCOM/unbeaching.nc'
-
-    ds = Dataset(input_file, "r+", format="NETCDF4")
-    lat = ds['latitude'][:]
-    lon = ds['longitude'][:]
-
-    unBeachU= Field('unBeach_U', ds['unBeachU'][:,:],
+def add_Kh(winds_currents_fieldset, lat, lon, kh):
+    print("Making Kh.....")
+    kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
                    lon=lon, lat=lat, allow_time_extrapolation=True,
                    fieldtype='Kh_meridional', mesh='spherical')
-    unBeachV= Field('unBeach_V', ds['unBeachV'][:,:],
+    kh_zonal = Field('Kh_zonal', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
+                   lon=lon, lat=lat, allow_time_extrapolation=True,
+                   fieldtype='Kh_zonal', mesh='spherical')
+
+    winds_currents_fieldset.add_field(kh_mer, 'Kh_meridional')
+    winds_currents_fieldset.add_field(kh_zonal, 'Kh_zonal')
+
+def set_unbeaching(winds_currents_fieldset, lat, lon, input_file):
+    print("Adding unbeach....")
+
+
+    ds = Dataset(input_file, "r+", format="NETCDF4")
+
+    unBeachU= Field('unBeachU', ds['unBeachU'][:,:],
+                   lon=lon, lat=lat, allow_time_extrapolation=True,
+                   fieldtype='Kh_meridional', mesh='spherical')
+    unBeachV= Field('unBeachV', ds['unBeachV'][:,:],
                     lon=lon, lat=lat, allow_time_extrapolation=True,
                     fieldtype='Kh_zonal', mesh='spherical')
 
-    UVunbeach = VectorField('UVunbeach', unBeachU, unBeachV)
-    fieldset.add_vector_field(UVunbeach)
+    winds_currents_fieldset.add_field(unBeachU, 'unBeachU')
+    winds_currents_fieldset.add_field(unBeachV, 'unBeachV')
 
 
 def main(start_date = -1, end_date = -1, name=''):
@@ -49,6 +58,7 @@ def main(start_date = -1, end_date = -1, name=''):
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]
     output_file = join(config[WorldLitter.output_folder], F"{name}{config[WorldLitter.output_file]}")
+    unbeach_file = config[WorldLitter.unbeach_file]
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
     dt = config[WorldLitter.dt]
@@ -85,29 +95,19 @@ def main(start_date = -1, end_date = -1, name=''):
     winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
                                                    allow_time_extrapolation=True,
                                                    field_chunksize=(2048,2048))
-    # -------  Adding constants for periodic halo
-    winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
-    winds_currents_fieldset.add_constant('halo_east', winds_currents_fieldset.U.grid.lon[-1])
-    winds_currents_fieldset.add_periodic_halo(zonal=True)                                   #create a zonal halo
-
-    set_unbeaching(winds_currents_fieldset)
-
     # -------  Making syntetic diffusion coefficient
     U_grid = winds_currents_fieldset.U.grid
     lat = U_grid.lat
     lon = U_grid.lon
     # Getting proporcional size by degree
+    add_Kh(winds_currents_fieldset, lat, lon, kh)
+    set_unbeaching(winds_currents_fieldset, lat, lon, unbeach_file)
 
-    print("Making Kh.....")
-    kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
-                   lon=lon, lat=lat, allow_time_extrapolation=True,
-                   fieldtype='Kh_meridional', mesh='spherical')
-    kh_zonal = Field('Kh_zonal', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
-                   lon=lon, lat=lat, allow_time_extrapolation=True,
-                   fieldtype='Kh_zonal', mesh='spherical')
+    # -------  Adding constants for periodic halo
+    winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
+    winds_currents_fieldset.add_constant('halo_east', winds_currents_fieldset.U.grid.lon[-1])
+    winds_currents_fieldset.add_periodic_halo(zonal=True)                                   #create a zonal halo
 
-    winds_currents_fieldset.add_field(kh_mer, 'Kh_meridional')
-    winds_currents_fieldset.add_field(kh_zonal, 'Kh_zonal')
 
     print("Setting up everything.....")
     if repeat_release:
@@ -119,11 +119,7 @@ def main(start_date = -1, end_date = -1, name=''):
     print(F"Running with {pset.size} number of particles")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
-    # pset.execute(AdvectionRK4,
-    # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
-    # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
-    # pset.execute(AdvectionRK4 + pset.Kernel(EricSolution),
-    # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
+
     print(F"Running for {run_time} hour", flush=True)
     pset.execute(pset.Kernel(AdvectionRK4)
                  + pset.Kernel(BeachTesting_2D)

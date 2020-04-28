@@ -29,15 +29,15 @@ def BeachTesting_2D(particle, fieldset, time):
 
 def UnBeaching(particle, fieldset, time):
     if particle.beached == 1:
-        (ub, vb) = fieldset.UVunbeach[time, particle.depth, particle.lat, particle.lon]
+        ub = fieldset.unBeachU[time, particle.depth, particle.lat, particle.lon]
+        vb = fieldset.unBeachV[time, particle.depth, particle.lat, particle.lon]
+        # print("OLD:", particle)
         particle.lon += ub * particle.dt
         particle.lat += vb * particle.dt
-        # if ub > .1:
-        print("OLD:", particle)
-        print("NEW:", particle)
-        print("dt:", particle.dt)
-        print("u:", ub)
-        print("v:", vb, flush=True)
+        # print("NEW:", particle)
+        # print("dt:", particle.dt)
+        # print("u:", ub)
+        # print("v:", vb, flush=True)
         particle.beached = 0
 
 def BrownianMotion2D(particle, fieldset, time):

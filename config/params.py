@@ -19,6 +19,7 @@ class WorldLitter(Enum):
     countries_file = 12
     dt = 13
     start_date = 14
+    unbeach_file = 15
 
 
 class DataCols(Enum):
