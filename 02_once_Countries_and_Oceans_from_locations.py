@@ -5,20 +5,22 @@ import shapely.speedups
 import numpy as np
 import functools
 from os.path import join
+from config.MainConfig import get_preproc_config
+from config.params import WorldLitter, Preproc
 import matplotlib.pyplot as plt
 
 shapely.speedups.enable()
 
-input_folder = '/home/olmozavala/Dropbox/TestData/GIS/Shapefiles/World/high_res/'
-output_folder = '/home/data/UN_Litter_data'
-output_file = 'Particles_by_Country.csv'
-data_folder = 'data'
-file_countries = 'ne_50m_admin_0_countries.shp'
-release_loc_folder = join(data_folder,"release_locations")
-buffer_size = .2  # in degrees
+config = get_preproc_config()
 
-lat_files = ['coasts_all_y.csv', 'rivers_all_y.csv']
-lon_files = ['coasts_all_x.csv', 'rivers_all_x.csv']
+input_folder = config[Preproc.shapes_folder]
+output_file = config[WorldLitter.countries_file]
+file_countries = 'ne_50m_admin_0_countries.shp'
+release_loc_folder = config[WorldLitter.loc_folder]
+lat_files = config[WorldLitter.lat_files]
+lon_files = config[WorldLitter.lon_files]
+
+buffer_size = .2  # in degrees
 
 geo_countries = gpd.GeoDataFrame.from_file(input_folder+file_countries)
 geo_oceans = gpd.GeoDataFrame.from_file('/home/olmozavala/Dropbox/TestData/GIS/Shapefiles/World/oceans_oz/oceans_oz.shp')
@@ -98,7 +100,7 @@ for c_country in country_names:
             inter = geo_oceans.intersects(c_geo)
             int_oceans = geo_oceans[inter]['name'].values
             print(F' Oceans ({len(int_oceans)}): {int_oceans}',  end=" ")
-            loc_by_country.at[c_country, 'oceans'] = ';'.join([F"x" for x in int_oceans])
+            loc_by_country.at[c_country, 'oceans'] = ';'.join([x for x in int_oceans])
 
 
     if len(temp_points) > 0:
@@ -113,4 +115,4 @@ for c_country in country_names:
         print("Deleting!!!!!!!! .....")
         loc_by_country.drop(c_country, inplace=True)
 
-loc_by_country.to_csv(join(output_folder, output_file))
+loc_by_country.to_csv(output_file)

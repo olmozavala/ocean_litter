@@ -28,7 +28,7 @@ countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 df_country_list = df_country_list.dropna()
 
-all_reduce_particles_by = [10, 8, 4]
+all_reduce_particles_by = [4, 2, 1]
 min_number_particles = 20
 
 # Iterate over the options to reduce the number of particles

@@ -92,7 +92,7 @@ def main(start_date = -1, end_date = -1, name=''):
         else:
             pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0)
 
-        print("Running.....")
+        print(F"Running with {pset.size} number of particles", flush=True)
         out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
         t = time.time()
         # pset.execute(AdvectionRK4,
@@ -101,7 +101,7 @@ def main(start_date = -1, end_date = -1, name=''):
         # pset.execute(AdvectionRK4 + pset.Kernel(EricSolution),
         # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
         print(F"Running for {run_time} hour")
-        pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D),
+        pset.execute(AdvectionRK4,
                     runtime=run_time, dt=dt,
                      output_file=out_parc_file)
 

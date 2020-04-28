@@ -1,24 +1,54 @@
-from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, ScipyParticle, AdvectionRK4, plotTrajectoriesFile
+from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, ScipyParticle
+from parcels import plotTrajectoriesFile, ErrorCode, VectorField
 import numpy as np
 from datetime import timedelta, datetime, date
 import time
 from os.path import join
-from kernels.wl_kernels import periodicBC, RandomWalkSphere, BrownianMotion2D, EricSolution, BrownianMotion2D
+from kernels.wl_kernels import periodicBC, AdvectionRK4, UnBeaching, BeachTesting_2D, BrownianMotion2D
 import parcels.plotting as pplt
 from parcels.scripts import *
 from utils.io_hycom import read_files
-import os
 import functools
 from config.params import WorldLitter
 from config.MainConfig import get_op_config
 import sys
+from netCDF4 import Dataset
+
+def outOfBounds(particle, fieldset, time):
+    particle.beached = 2
+
+
+class PlasticParticle(ScipyParticle):
+    # age = Variable('age', dtype=np.float32, initial=0.)
+    # beached : 0 sea, 1 beached,  2  please unbeach
+    beached = Variable('beached', dtype=np.int32, initial=0.)
+
+
+def set_unbeaching(fieldset):
+
+    input_file = '/home/data/UN_Litter_data/HYCOM/unbeaching.nc'
+
+    ds = Dataset(input_file, "r+", format="NETCDF4")
+    lat = ds['latitude'][:]
+    lon = ds['longitude'][:]
+
+    unBeachU= Field('unBeach_U', ds['unBeachU'][:,:],
+                   lon=lon, lat=lat, allow_time_extrapolation=True,
+                   fieldtype='Kh_meridional', mesh='spherical')
+    unBeachV= Field('unBeach_V', ds['unBeachV'][:,:],
+                    lon=lon, lat=lat, allow_time_extrapolation=True,
+                    fieldtype='Kh_zonal', mesh='spherical')
+
+    UVunbeach = VectorField('UVunbeach', unBeachU, unBeachV)
+    fieldset.add_vector_field(UVunbeach)
+
 
 def main(start_date = -1, end_date = -1, name=''):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]
-    output_file = join(config[WorldLitter.output_folder], F"{name}_{config[WorldLitter.output_file]}")
+    output_file = join(config[WorldLitter.output_folder], F"{name}{config[WorldLitter.output_file]}")
     lat_files = config[WorldLitter.lat_files]
     lon_files = config[WorldLitter.lon_files]
     dt = config[WorldLitter.dt]
@@ -60,6 +90,8 @@ def main(start_date = -1, end_date = -1, name=''):
     winds_currents_fieldset.add_constant('halo_east', winds_currents_fieldset.U.grid.lon[-1])
     winds_currents_fieldset.add_periodic_halo(zonal=True)                                   #create a zonal halo
 
+    set_unbeaching(winds_currents_fieldset)
+
     # -------  Making syntetic diffusion coefficient
     U_grid = winds_currents_fieldset.U.grid
     lat = U_grid.lat
@@ -79,12 +111,12 @@ def main(start_date = -1, end_date = -1, name=''):
 
     print("Setting up everything.....")
     if repeat_release:
-        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0,
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0,
                            repeatdt=repeat_release)
     else:
-        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0)
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0)
 
-    print("Running.....")
+    print(F"Running with {pset.size} number of particles")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
     # pset.execute(AdvectionRK4,
@@ -92,11 +124,17 @@ def main(start_date = -1, end_date = -1, name=''):
     # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),
     # pset.execute(AdvectionRK4 + pset.Kernel(EricSolution),
     # pset.execute(AdvectionRK4 + pset.Kernel(RandomWalkSphere),
-    print(F"Running for {run_time} hour")
-    pset.execute(AdvectionRK4 + pset.Kernel(BrownianMotion2D),
+    print(F"Running for {run_time} hour", flush=True)
+    pset.execute(pset.Kernel(AdvectionRK4)
+                 + pset.Kernel(BeachTesting_2D)
+                 + pset.Kernel(UnBeaching)
+                 + pset.Kernel(BrownianMotion2D)
+                 + pset.Kernel(BeachTesting_2D)
+                 + pset.Kernel(periodicBC),
                 runtime=run_time,
                  dt=dt,
-                 output_file=out_parc_file)
+                 output_file=out_parc_file,
+                recovery = {ErrorCode.ErrorOutOfBounds: outOfBounds})
 
     print(F"Done time={time.time()-t}.....")
 
