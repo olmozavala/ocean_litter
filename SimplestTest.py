@@ -5,6 +5,7 @@ import math
 from parcels import rng as random
 from parcels.scripts import *
 import matplotlib.pyplot as plt
+import mpi4py
 
 # ############### README ################
 # Here I'm testing diffusion and the hability to catch nan values. If a nan
