@@ -28,7 +28,8 @@ countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 df_country_list = df_country_list.dropna()
 
-all_reduce_particles_by = [4, 2, 1]
+# all_reduce_particles_by = [4, 2, 1]
+all_reduce_particles_by = [1]
 min_number_particles = 20
 
 # Iterate over the options to reduce the number of particles
@@ -89,7 +90,7 @@ for reduce_particles_global in all_reduce_particles_by:
 
     print(" Saving json file .....")
     json_txt = json.dumps(countries)
-    merged_output_file = F"{final_ouput_folder}/world_{input_file.replace('.nc','')}.json"
+    merged_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}.json"
     f = open(merged_output_file,"w+")
     f.write(json_txt)
 

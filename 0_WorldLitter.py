@@ -15,7 +15,7 @@ import sys
 from netCDF4 import Dataset
 
 def outOfBounds(particle, fieldset, time):
-    particle.beached = 2
+    particle.beached = 3
 
 
 class PlasticParticle(JITParticle):

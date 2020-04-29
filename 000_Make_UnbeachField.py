@@ -27,7 +27,7 @@ def island(U, V, j, i):
         return False
 
 inc = 1
-speed = 2
+speed = 100000
 for j in range(1, U.shape[1]-2):
     if j % 100 == 0:
         print(j)
