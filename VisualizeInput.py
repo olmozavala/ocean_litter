@@ -43,12 +43,12 @@ def plot(input_file, title='', field='surf_u'):
     ds.close()
 
 
-input_file = "/home/data/UN_Litter_data/HYCOM/2010c/hycom_JRA55_GLBv0.08_20100101_t000.nc"
-plot(input_file, 'combined')
-input_file = "/home/data/UN_Litter_data/HYCOM/2010/hycom_GLBv0.08_536_2010010112_t000.nc"
-plot(input_file, 'old')
+# input_file = "/home/data/UN_Litter_data/HYCOM/2010c/hycom_JRA55_GLBv0.08_20100101_t000.nc"
+# plot(input_file, 'combined')
+# input_file = "/home/data/UN_Litter_data/HYCOM/2010/hycom_GLBv0.08_536_2010010112_t000.nc"
+# plot(input_file, 'old')
 #
-input_file = "/home/data/UN_Litter_data/HYCOM/unbeaching.nc"
-plot2d(input_file, 'beaching', 'unBeachU')
+# input_file = "/home/data/UN_Litter_data/HYCOM/unbeaching100ms.nc"
+# plot2d(input_file, 'beaching U', 'unBeachU')
 
 

@@ -26,10 +26,8 @@ input_file = config[WorldLitter.output_file]
 
 countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
-df_country_list = df_country_list.dropna()
 
-# all_reduce_particles_by = [4, 2, 1]
-all_reduce_particles_by = [1]
+all_reduce_particles_by = [3,2]
 min_number_particles = 20
 
 # Iterate over the options to reduce the number of particles
@@ -66,6 +64,7 @@ for reduce_particles_global in all_reduce_particles_by:
     countries = {}
     # Iterate over each country
     tot_countries = df_country_list.size
+    tot_assigned_particles = 0
     for cur_country_name in df_country_list.index:
         print(F'-------- {cur_country_name} ----------')
         # First and last particle position
@@ -73,6 +72,7 @@ for reduce_particles_global in all_reduce_particles_by:
         particles_for_country = [int(x) for x in particles_for_country_str]
 
         tot_particles = len(particles_for_country)
+        tot_assigned_particles += tot_particles
         reduce_particles_by_country = reduce_particles_global
         # If there are not enough particles then we need to reduce the 'separation' of particles
         while (((tot_particles / reduce_particles_by_country) < min_number_particles) and (
@@ -100,3 +100,5 @@ for reduce_particles_global in all_reduce_particles_by:
     zf = zipfile.ZipFile(zip_file_name, mode='w')
     zf.write(merged_output_file, compress_type=compression)
     zf.close()
+
+    print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
