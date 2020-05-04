@@ -27,7 +27,8 @@ input_file = config[WorldLitter.output_file]
 countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-all_reduce_particles_by = [3,2]
+all_reduce_particles_by = [4, 3, 2, 1]
+# all_reduce_particles_by = [1]
 min_number_particles = 20
 
 # Iterate over the options to reduce the number of particles
@@ -85,7 +86,8 @@ for reduce_particles_global in all_reduce_particles_by:
         cur_lat_all_part = lat[red_particles_for_country].filled()
         cur_lon_all_part = lon[red_particles_for_country].filled()
         countries[cur_country_name] = {'lat_lon':[vecfmt(cur_lat_all_part).tolist(), vecfmt(cur_lon_all_part).tolist()],
-                                       'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')]}
+                                       'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
+                                       'continent': df_country_list.loc[cur_country_name]['continent']}
         cur_idx += 3  # Hardcoded because the way the country list is made
 
     print(" Saving json file .....")

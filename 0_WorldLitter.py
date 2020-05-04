@@ -24,7 +24,6 @@ class PlasticParticle(JITParticle):
     beached = Variable('beached', dtype=np.int32, initial=0.)
 
 def add_Kh(winds_currents_fieldset, lat, lon, kh):
-    print("Making Kh.....")
     kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
                    lon=lon, lat=lat, allow_time_extrapolation=True,
                    fieldtype='Kh_meridional', mesh='spherical')
@@ -36,9 +35,6 @@ def add_Kh(winds_currents_fieldset, lat, lon, kh):
     winds_currents_fieldset.add_field(kh_zonal, 'Kh_zonal')
 
 def set_unbeaching(winds_currents_fieldset, lat, lon, input_file):
-    print("Adding unbeach....")
-
-
     ds = Dataset(input_file, "r+", format="NETCDF4")
 
     unBeachU= Field('unBeachU', ds['unBeachU'][:,:],
@@ -52,7 +48,7 @@ def set_unbeaching(winds_currents_fieldset, lat, lon, input_file):
     winds_currents_fieldset.add_field(unBeachV, 'unBeachV')
 
 
-def main(start_date = -1, end_date = -1, name=''):
+def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, unbeaching=True):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
@@ -70,7 +66,7 @@ def main(start_date = -1, end_date = -1, name=''):
         end_date = config[WorldLitter.end_date]
     run_time = timedelta(seconds=(end_date - start_date).total_seconds())
 
-    file_names = read_files(base_folder, years, wind=False, start_date=start_date, end_date=end_date)
+    file_names = read_files(base_folder, years, wind=winds, start_date=start_date, end_date=end_date)
     if len(file_names) == 0:
         print("ERROR: We couldn't read any file!")
         return 0
@@ -91,7 +87,7 @@ def main(start_date = -1, end_date = -1, name=''):
                   'time': 'time'}
 
     print("Reading data.....")
-    # Adding the currents field
+    # Adding the vector fields it may be currents or currents + winds
     winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
                                                    allow_time_extrapolation=True,
                                                    field_chunksize=(2048,2048))
@@ -100,8 +96,12 @@ def main(start_date = -1, end_date = -1, name=''):
     lat = U_grid.lat
     lon = U_grid.lon
     # Getting proporcional size by degree
-    add_Kh(winds_currents_fieldset, lat, lon, kh)
-    set_unbeaching(winds_currents_fieldset, lat, lon, unbeach_file)
+    if diffusion:
+        print("Adding diffusion .....")
+        add_Kh(winds_currents_fieldset, lat, lon, kh)
+    if unbeaching:
+        print("Adding unbeaching.....")
+        set_unbeaching(winds_currents_fieldset, lat, lon, unbeach_file)
 
     # -------  Adding constants for periodic halo
     winds_currents_fieldset.add_constant('halo_west', winds_currents_fieldset.U.grid.lon[0])
@@ -121,12 +121,17 @@ def main(start_date = -1, end_date = -1, name=''):
     t = time.time()
 
     print(F"Running for {run_time} hour", flush=True)
-    pset.execute(pset.Kernel(AdvectionRK4)
-                 + pset.Kernel(BeachTesting_2D)
-                 + pset.Kernel(UnBeaching)
-                 + pset.Kernel(BrownianMotion2D)
-                 + pset.Kernel(BeachTesting_2D)
-                 + pset.Kernel(periodicBC),
+    kernels = pset.Kernel(AdvectionRK4)
+    if unbeaching:
+        kernels += pset.Kernel(BeachTesting_2D)
+        kernels += pset.Kernel(UnBeaching)
+    if diffusion:
+        kernels += pset.Kernel(BrownianMotion2D)
+        kernels += pset.Kernel(BeachTesting_2D)
+
+    kernels += pset.Kernel(periodicBC)
+
+    pset.execute(kernels,
                 runtime=run_time,
                  dt=dt,
                  output_file=out_parc_file,
@@ -142,20 +147,15 @@ def main(start_date = -1, end_date = -1, name=''):
     print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!")
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
-        main(start_date=start_date)
-    elif len(sys.argv) == 3:
+    if len(sys.argv) >= 6:
         start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
         end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
+        winds = bool(sys.argv[3])
+        diffusion = bool(sys.argv[4])
+        unbeaching = bool(sys.argv[5])
+        name = sys.argv[6]
         print(F"Start date: {start_date} End date: {end_date}")
-        main(start_date, end_date)
-    elif len(sys.argv) == 4:
-        start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
-        end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
-        name = sys.argv[3]
-        print(F"Start date: {start_date} End date: {end_date}")
-        main(start_date, end_date, name)
+        main(start_date, end_date, name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)
     else:
+        print("Not enough parameters, using defaults!!!!")
         main()
-

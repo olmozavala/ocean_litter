@@ -41,14 +41,16 @@ all_locs = [(lats[i], lons[i]) for i in range(len(lats))]
 geo_locs = gpd.GeoDataFrame([Point(x[0], x[1]) for x in all_locs], columns=['geometry'])
 print("Done!")
 
-country_names_and_continents = geo_countries.loc['ADMIN','CONTINENT'].values
-country_names = country_names_and_continents['ADMIN']
+country_names = geo_countries['ADMIN']
+continents = geo_countries['CONTINENT']
 ocean_names = geo_oceans['name'].values
-loc_by_country = pd.DataFrame([], index=country_names, columns=['total', 'oceans', 'min', 'max', 'idx_country'])
+loc_by_country = pd.DataFrame([], index=country_names, columns=['total', 'oceans', 'continent', 'min', 'max', 'idx_country'])
 tot_assigned = 0
 
 print(country_names)
 print(ocean_names)
+print(continents.unique())
+exit()
 
 # print("Plotting...")
 # fig, ax = plt.subplots()
@@ -59,8 +61,9 @@ print(ocean_names)
 
 # Iterate over every country
 
-for c_country in country_names:
+for i, c_country in enumerate(country_names):
     idx_country = geo_countries['ADMIN'] == c_country
+    c_continent = continents[i]
 
     c_geo_country = geo_countries[idx_country].geometry.buffer(buffer_size)
 
@@ -93,6 +96,7 @@ for c_country in country_names:
         loc_by_country.at[c_country, 'min'] = np.amin(np.array(indexes))
         loc_by_country.at[c_country, 'max'] = np.amax(np.array(indexes))
         loc_by_country.at[c_country, 'idx_country'] = indexes
+        loc_by_country.at[c_country, 'continent'] = c_continent
         # loc_by_country.at[c_country, 'lat'] = ','.join([str(obj.x) for obj in temp_points])
         # loc_by_country.at[c_country, 'lon'] = ','.join([str(obj.y) for obj in temp_points])
         loc_by_country.at[c_country, 'total'] = len(temp_points)

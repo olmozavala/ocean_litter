@@ -9,7 +9,7 @@ class WorldLitter(Enum):
     loc_folder = 3
     lat_files = 4
     lon_files = 5
-    output_folder = 20
+    output_folder = 16
     output_file = 6
     wind_factor = 7
     repeat_release = 8

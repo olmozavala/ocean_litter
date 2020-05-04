@@ -6,9 +6,9 @@ def read_files(base_folder, years, wind=False, start_date=0, end_date=0):
     all_files = []
     for year in years:
         if wind:
-            c_year_path = join(base_folder, F'{year}w')
-        else:
             c_year_path = join(base_folder, F'{year}c')
+        else:
+            c_year_path = join(base_folder, F'{year}')
         files = os.listdir(c_year_path)
         # Filtering just dates after initial date
         if start_date == 0:
