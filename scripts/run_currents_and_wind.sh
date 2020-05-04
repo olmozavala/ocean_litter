@@ -11,4 +11,4 @@ module load intel-openmpi
 module load anaconda3.7.3
 
 #        start_date end_date winds diffusion unbeaching name
-srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py '2010-01-01:0' '2010-01-05:0' 'True' 'False' 'True' 'OneYear_Currents_And_Wind' > OneYear_Currents_And_Wind.log
+srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py '2010-01-01:0' '2011-01-01:0' 'True' 'False' 'True' 'OneYear_Currents_And_Wind' > OneYear_Currents_And_Wind.log
