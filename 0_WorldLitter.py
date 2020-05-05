@@ -86,7 +86,7 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, un
                   'lon': 'longitude',
                   'time': 'time'}
 
-    print("Reading data.....")
+    print("Reading data.....", flush=True)
     # Adding the vector fields it may be currents or currents + winds
     winds_currents_fieldset = FieldSet.from_netcdf(file_names, variables, dimensions,
                                                    allow_time_extrapolation=True,
@@ -146,13 +146,16 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, un
     # plotTrajectoriesFile(output_file) # Plotting trajectories
     print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!")
 
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1", "True")
+
 if __name__ == "__main__":
     if len(sys.argv) >= 6:
         start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
         end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
-        winds = bool(sys.argv[3])
-        diffusion = bool(sys.argv[4])
-        unbeaching = bool(sys.argv[5])
+        winds = str2bool(sys.argv[3])
+        diffusion = str2bool(sys.argv[4])
+        unbeaching = str2bool(sys.argv[5])
         name = sys.argv[6]
         print(F"Start date: {start_date} End date: {end_date}")
         main(start_date, end_date, name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)

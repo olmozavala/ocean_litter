@@ -9,6 +9,7 @@ import pandas as pd
 from utils.ParticlesByCountry import case1
 from config.MainConfig import get_op_config
 from config.params import WorldLitter
+import matplotlib.pyplot as plt
 
 
 compression = zipfile.ZIP_DEFLATED
@@ -27,7 +28,7 @@ input_file = config[WorldLitter.output_file]
 countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-all_reduce_particles_by = [4, 3, 2, 1]
+all_reduce_particles_by = [2, 1]
 # all_reduce_particles_by = [1]
 min_number_particles = 20
 
@@ -42,6 +43,8 @@ for reduce_particles_global in all_reduce_particles_by:
     print("----- Attributes ----")
     for name in nc_file.ncattrs():
         print(name, "=", getattr(nc_file, name))
+
+    plt.imshow(nc_file['beached'])
 
     # Print variables
     print("----- Variables ----")
