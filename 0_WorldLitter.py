@@ -157,7 +157,7 @@ if __name__ == "__main__":
         diffusion = str2bool(sys.argv[4])
         unbeaching = str2bool(sys.argv[5])
         name = sys.argv[6]
-        print(F"Start date: {start_date} End date: {end_date}")
+        print(F"Start date: {start_date} End date: {end_date} winds: {winds} diffusion={diffusion} unbeaching={unbeaching}")
         main(start_date, end_date, name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)
     else:
         print("Not enough parameters, using defaults!!!!")
