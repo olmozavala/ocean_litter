@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 compression = zipfile.ZIP_DEFLATED
 
 def myfmt(r): # 'Round to 2 decimals'
-    return F"{r:.2f}"
+    return float(F"{r:.2f}")
 vecfmt = np.vectorize(myfmt)
 
 config = get_op_config()

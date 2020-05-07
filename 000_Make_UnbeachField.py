@@ -8,7 +8,8 @@ import numpy as np
 from os.path import join
 
 
-data_dir = '/home/data/UN_Litter_data/HYCOM/2010c/'
+# data_dir = '/home/data/UN_Litter_data/HYCOM/2010c/'
+data_dir = '/data/UN_Litter_data/HYCOM/2010c/'
 datasetM = xr.open_dataset(data_dir + 'hycom_JRA55_GLBv0.08_20100101_t000.nc')
 
 dataArrayLonF = datasetM['longitude']
@@ -93,7 +94,7 @@ dataset[dataArrayLonF.name] = dataArrayLonF
 dataset[dataArrayLatF.name] = dataArrayLatF
 dataset[dataArrayUnBeachU.name] = dataArrayUnBeachU
 dataset[dataArrayUnBeachV.name] = dataArrayUnBeachV
-dataset.to_netcdf(path=join(data_dir, '..','unbeaching.nc'), engine='scipy')
+dataset.to_netcdf(path=join(data_dir, '..',F'unbeaching{speed}ms.nc'), engine='scipy')
 
 
 datasetM

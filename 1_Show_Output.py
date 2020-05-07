@@ -1,9 +1,10 @@
 from datetime import datetime
 from os.path import join
 from netCDF4 import Dataset
-import gmplot
+# import gmplot
 import numpy as np
 import functools
+from parcels.scripts.plottrajectoriesfile import plotTrajectoriesFile
 
 from config.MainConfig import get_op_config
 from config.params import WorldLitter
@@ -20,6 +21,10 @@ release_loc_folder = config[WorldLitter.loc_folder]
 lats = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
 lons =  functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
+# -------------- Plot with OP ---------------
+plotTrajectoriesFile(file_name, mode='2d')
+
+# -------------- Info about variables ---------------
 # ds = Dataset(file_name, "r+", format="NETCDF4")
 # this_many = 10
 # print(F"Variables: {ds.variables.keys()}")
@@ -30,10 +35,11 @@ lons =  functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfro
 # print(F"z: {ds.variables['z'].shape}:{ds.variables['z'][0:this_many]}")
 # print(F"beached: {ds.variables['beached'].shape}:{ds.variables['beached'][0:this_many]}")
 #
-# print("Done!")
 
+# -------------- Location in a map ---------------
+# gmap3 = gmplot.GoogleMapPlotter(0, 0, 3)
+# gmap3.scatter(lats, lons, '# FF0000', size=80, marker=False)
+#
+# gmap3.draw("sopas.html")
 
-gmap3 = gmplot.GoogleMapPlotter(0, 0, 3)
-gmap3.scatter(lats, lons, '# FF0000', size=80, marker=False)
-
-gmap3.draw("sopas.html")
+print("Done!")

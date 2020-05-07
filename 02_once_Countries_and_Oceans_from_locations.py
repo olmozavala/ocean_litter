@@ -50,7 +50,6 @@ tot_assigned = 0
 print(country_names)
 print(ocean_names)
 print(continents.unique())
-exit()
 
 # print("Plotting...")
 # fig, ax = plt.subplots()
