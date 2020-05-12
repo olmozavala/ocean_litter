@@ -56,9 +56,9 @@ def make_hist(only_acc):
     output_file = join(output_histogram_folder, F"{input_file.replace('.nc','')}_histogram_{resolution_txt}")
     output_file_tiff = join(output_tiff_folder, F"{input_file.replace('.nc','')}_histogram_{resolution_txt}.tiff")
     output_file_beached = join(output_histogram_folder,  F"{input_file.replace('.nc','')}_beached_histogram_{resolution_txt}")
-    output_file_beached_tiff = join(output_histogram_folder,  F"{input_file.replace('.nc','')}_beached_histogram_{resolution_txt}.tiff")
+    output_file_beached_tiff = join(output_tiff_folder,  F"{input_file.replace('.nc','')}_beached_histogram_{resolution_txt}.tiff")
 
-    ds = Dataset(file_name, "r+", format="NETCDF4")
+    ds = Dataset(file_name, "r", format="NETCDF4")
 
     lats = ds['lat'][:]
     lons = ds['lon'][:]
@@ -79,8 +79,8 @@ def make_hist(only_acc):
         beached_histo = np.ones((time_steps, tot_lats, tot_lons))
 
     # Iterate over all the times
-    # for c_time in range(2):
-    for c_time in range(time_steps):
+    for c_time in range(2):
+    # for c_time in range(time_steps):
         c_lats = lats[:,c_time]
         c_lons = lons[:,c_time]
         c_beached = beached[:,c_time]
@@ -117,6 +117,9 @@ def make_hist(only_acc):
 
     idx = acum_histo == 1
     acum_histo[idx] = np.nan
+    # Avoid zeros
+    idx = acum_histo == 0
+    acum_histo[idx] = 1
     # Saving accumulated histogram as netcdf
     print("Saving files....")
     ds = xr.Dataset( { "histo": (("lat","lon"), acum_histo),

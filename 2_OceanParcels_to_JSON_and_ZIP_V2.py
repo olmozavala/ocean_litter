@@ -28,40 +28,38 @@ input_file = config[WorldLitter.output_file]
 countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-all_reduce_particles_by = [2, 1]
+all_reduce_particles_by = [4, 2, 1]
 # all_reduce_particles_by = [1]
 min_number_particles = 20
+
+nc_file = Dataset(join(input_folder, input_file), "r", format="NETCDF4")
+
+print("----- Attributes ----")
+for name in nc_file.ncattrs():
+    print(name, "=", getattr(nc_file, name))
+# plt.imshow(nc_file['beached'])
+# Print variables
+print("----- Variables ----")
+all_vars = nc_file.variables
+for name in all_vars.keys():
+    print(name)
+
+tot_time_steps = nc_file.dimensions['obs'].size
+glob_num_particles = nc_file.dimensions['traj'].size
+print(F"Total number of timesteps: {tot_time_steps} Total number of particles: {tot_time_steps * glob_num_particles} ")
+
+# 4936, 731 (Asia)
+traj = all_vars['trajectory']
+time = all_vars['time']
+lat = all_vars['lat']
+lon = all_vars['lon']
+Z = all_vars['z']
 
 # Iterate over the options to reduce the number of particles
 for reduce_particles_global in all_reduce_particles_by:
     final_ouput_folder = F"{output_folder}/{reduce_particles_global}"
     if not(os.path.exists(final_ouput_folder)):
         os.makedirs(final_ouput_folder)
-
-    nc_file = Dataset(join(input_folder, input_file), "r", format="NETCDF4")
-
-    print("----- Attributes ----")
-    for name in nc_file.ncattrs():
-        print(name, "=", getattr(nc_file, name))
-
-    plt.imshow(nc_file['beached'])
-
-    # Print variables
-    print("----- Variables ----")
-    all_vars = nc_file.variables
-    for name in all_vars.keys():
-        print(name)
-
-    tot_time_steps = nc_file.dimensions['obs'].size
-    glob_num_particles = nc_file.dimensions['traj'].size
-    print(F"Total number of timesteps: {tot_time_steps} Total number of particles: {tot_time_steps * glob_num_particles} ")
-
-    # 4936, 731 (Asia)
-    traj = all_vars['trajectory']
-    time = all_vars['time']
-    lat = all_vars['lat']
-    lon = all_vars['lon']
-    Z = all_vars['z']
 
     cur_idx = 0
 
@@ -107,3 +105,5 @@ for reduce_particles_global in all_reduce_particles_by:
     zf.close()
 
     print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
+
+nc_file.close()
