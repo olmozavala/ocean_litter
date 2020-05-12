@@ -28,7 +28,7 @@ input_file = config[WorldLitter.output_file]
 countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-all_reduce_particles_by = [4, 2, 1]
+all_reduce_particles_by = [4]
 # all_reduce_particles_by = [1]
 min_number_particles = 20
 
@@ -47,6 +47,7 @@ for name in all_vars.keys():
 tot_time_steps = nc_file.dimensions['obs'].size
 glob_num_particles = nc_file.dimensions['traj'].size
 print(F"Total number of timesteps: {tot_time_steps} Total number of particles: {tot_time_steps * glob_num_particles} ")
+particlesEveryThisTimeSteps = 100  # How many timesteps save in each file
 
 # 4936, 731 (Asia)
 traj = all_vars['trajectory']
@@ -63,46 +64,49 @@ for reduce_particles_global in all_reduce_particles_by:
 
     cur_idx = 0
 
-    countries = {}
     # Iterate over each country
     tot_countries = df_country_list.size
     tot_assigned_particles = 0
-    for cur_country_name in df_country_list.index:
-        print(F'-------- {cur_country_name} ----------')
-        # First and last particle position
-        particles_for_country_str = df_country_list.loc[cur_country_name]['idx_country'].replace(']','').replace('[','').split(',')
-        particles_for_country = [int(x) for x in particles_for_country_str]
+    tot_time_steps = time.shape[1]
+    for ichunk, cur_chunk in enumerate(np.arange(0,tot_time_steps, particlesEveryThisTimeSteps)):
+        countries = {}
+        for cur_country_name in df_country_list.index:
+            print(F'-------- {cur_country_name} ----------')
+            # First and last particle position
+            particles_for_country_str = df_country_list.loc[cur_country_name]['idx_country'].replace(']','').replace('[','').split(',')
+            particles_for_country = [int(x) for x in particles_for_country_str]
 
-        tot_particles = len(particles_for_country)
-        tot_assigned_particles += tot_particles
-        reduce_particles_by_country = reduce_particles_global
-        # If there are not enough particles then we need to reduce the 'separation' of particles
-        while (((tot_particles / reduce_particles_by_country) < min_number_particles) and (
-                reduce_particles_by_country > 1)):
-            reduce_particles_by_country -= 1
+            tot_particles = len(particles_for_country)
+            tot_assigned_particles += tot_particles
+            reduce_particles_by_country = reduce_particles_global
+            # If there are not enough particles then we need to reduce the 'separation' of particles
+            while (((tot_particles / reduce_particles_by_country) < min_number_particles) and (
+                    reduce_particles_by_country > 1)):
+                reduce_particles_by_country -= 1
 
-        red_particles_for_country = particles_for_country[::reduce_particles_by_country]
+            red_particles_for_country = particles_for_country[::reduce_particles_by_country]
 
-        # Append the particles
-        cur_lat_all_part = lat[red_particles_for_country].filled()
-        cur_lon_all_part = lon[red_particles_for_country].filled()
-        countries[cur_country_name] = {'lat_lon':[vecfmt(cur_lat_all_part).tolist(), vecfmt(cur_lon_all_part).tolist()],
-                                       'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
-                                       'continent': df_country_list.loc[cur_country_name]['continent']}
-        cur_idx += 3  # Hardcoded because the way the country list is made
+            # Append the particles
+            cur_lat_all_part = lat[red_particles_for_country].filled()
+            cur_lon_all_part = lon[red_particles_for_country].filled()
+            countries[cur_country_name] = {'lat_lon': [vecfmt(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist(),
+                                                      vecfmt(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist()],
+                                           'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
+                                           'continent': df_country_list.loc[cur_country_name]['continent']}
+            cur_idx += 3  # Hardcoded because the way the country list is made
 
-    print(" Saving json file .....")
-    json_txt = json.dumps(countries)
-    merged_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}.json"
-    f = open(merged_output_file,"w+")
-    f.write(json_txt)
+        print(" Saving json file .....")
+        json_txt = json.dumps(countries)
+        merged_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}_{ichunk:02d}.json"
+        f = open(merged_output_file,"w+")
+        f.write(json_txt)
 
-    print(" Saving zip file .....")
-    json_txt = json.dumps(countries)
-    zip_file_name = merged_output_file.replace('json','zip')
-    zf = zipfile.ZipFile(zip_file_name, mode='w')
-    zf.write(merged_output_file, compress_type=compression)
-    zf.close()
+        print(" Saving zip file .....")
+        json_txt = json.dumps(countries)
+        zip_file_name = merged_output_file.replace('json','zip')
+        zf = zipfile.ZipFile(zip_file_name, mode='w')
+        zf.write(merged_output_file, compress_type=compression)
+        zf.close()
 
     print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
 

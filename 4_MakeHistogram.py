@@ -79,11 +79,10 @@ def make_hist(only_acc):
         beached_histo = np.ones((time_steps, tot_lats, tot_lons))
 
     # Iterate over all the times
-    for c_time in range(2):
-    # for c_time in range(time_steps):
-        c_lats = lats[:,c_time]
-        c_lons = lons[:,c_time]
-        c_beached = beached[:,c_time]
+    for c_time in range(time_steps):
+        c_lats = lats[:, c_time]
+        c_lons = lons[:, c_time]
+        c_beached = beached[:, c_time]
 
         # Iterate over all particles
         for c_part in range(tot_particles):
@@ -122,22 +121,13 @@ def make_hist(only_acc):
     acum_histo[idx] = 1
     # Saving accumulated histogram as netcdf
     print("Saving files....")
-    ds = xr.Dataset( { "histo": (("lat","lon"), acum_histo),
-                       }, {"lat": LATS, "lon": LONS} )
-    ds.attrs['Conventions'] = "CF-1.0"
-    ds['lat'].attrs['standard_name'] = "latitude"
-    ds['lat'].attrs['long_name'] = "latitude"
-    ds['lat'].attrs['units'] = "degrees_north"
-    ds['lat'].attrs['axis'] = "Y"
-    ds['lon'].attrs['standard_name'] = "longitude"
-    ds['lon'].attrs['long_name'] = "longitude"
-    ds['lon'].attrs['units'] = "degrees_east"
-    ds['lon'].attrs['axis'] = "X"
-    ds['histo'].attrs['standard_name'] = "sea_surface_temperature"
-    ds['histo'].attrs['units'] = "K"
+    ds = xr.Dataset({"histo": (("lat", "lon"), acum_histo)}, {"lat": LATS, "lon": LONS})
+    ds = addAttributes(ds, 'histo')
     ds.to_netcdf(F"{output_file}.nc")
     ds.close()
-    ds = xr.Dataset( { "beached": (("lat","lon"), acum_beached) } )
+
+    ds = xr.Dataset({"beached": (("lat", "lon"), acum_beached)})
+    ds = addAttributes(ds, 'beached')
     ds.to_netcdf(F"{output_file_beached}.nc")
     ds.close()
 
@@ -152,6 +142,21 @@ def make_hist(only_acc):
         np.save(output_file_beached, beached_histo)
     # Save the plot by calling plt.savefig() BEFORE plt.show()
     print("Done!!!")
+
+def addAttributes(ds, var_name):
+    ds.attrs['Conventions'] = "CF-1.0"
+    ds['lat'].attrs['standard_name'] = "latitude"
+    ds['lat'].attrs['long_name'] = "latitude"
+    ds['lat'].attrs['units'] = "degrees_north"
+    ds['lat'].attrs['axis'] = "Y"
+    ds['lon'].attrs['standard_name'] = "longitude"
+    ds['lon'].attrs['long_name'] = "longitude"
+    ds['lon'].attrs['units'] = "degrees_east"
+    ds['lon'].attrs['axis'] = "X"
+    ds[var_name].attrs['standard_name'] = "sea_surface_temperature"
+    ds[var_name].attrs['units'] = "K"
+    return ds
+
 
 if __name__ == "__main__":
     make_hist(only_acc=True)
