@@ -7,6 +7,7 @@ class WorldLitter(Enum):
     years = 1
     base_folder = 2
     loc_folder = 3
+    stats_folder = 20
     lat_files = 4
     lon_files = 5
     output_folder = 16

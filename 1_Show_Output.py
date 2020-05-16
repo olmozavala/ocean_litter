@@ -14,9 +14,6 @@ import matplotlib as mpl
 
 from config.MainConfig import get_op_config
 from config.params import WorldLitter
-
-
-
 # -------------- Plot with OP ---------------
 
 # -------------- Info about variables ---------------
@@ -39,6 +36,7 @@ from config.params import WorldLitter
 
 def plotOceanParcelsOutput(file_name):
     plotTrajectoriesFile(file_name, mode='2d')
+    print("Done!")
 
 def plotJsonFile(file_name):
     with open(file_name) as f:
@@ -79,5 +77,5 @@ if __name__ == "__main__":
 
     # plotTrajectoriesFile(file_name)
 
-    json_file = F"/var/www/html/data/4/{input_file.replace('.nc','_01.json')}"
+    json_file = F"/var/www/html/data/4/{input_file.replace('.nc','_00.json')}"
     plotJsonFile(json_file)

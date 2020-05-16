@@ -1,10 +1,10 @@
 from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, ScipyParticle
-from parcels import plotTrajectoriesFile, ErrorCode, VectorField
+from parcels import plotTrajectoriesFile, ErrorCode, VectorField, AdvectionRK4
 import numpy as np
 from datetime import timedelta, datetime, date
 import time
 from os.path import join
-from kernels.wl_kernels import periodicBC, AdvectionRK4, UnBeaching, BeachTesting_2D, BrownianMotion2D
+from kernels.wl_kernels import periodicBC, AdvectionRK4Beached, UnBeaching, BeachTesting_2D, BrownianMotion2D, BrownianMotion2DUnbeaching
 import parcels.plotting as pplt
 from parcels.scripts import *
 from utils.io_hycom import read_files
@@ -110,24 +110,38 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, un
 
 
     print("Setting up everything.....")
-    if repeat_release:
-        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0,
-                           repeatdt=repeat_release)
+    if unbeaching:
+        if repeat_release:
+            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0,
+                               repeatdt=repeat_release)
+        else:
+            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0)
     else:
-        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0)
+        if repeat_release:
+            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0,
+                               repeatdt=repeat_release)
+        else:
+            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0)
 
     print(F"Running with {pset.size} number of particles")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
 
     print(F"Running for {run_time} hour", flush=True)
-    kernels = pset.Kernel(AdvectionRK4)
+    if unbeaching:
+        kernels = pset.Kernel(AdvectionRK4Beached)
+    else:
+        kernels = pset.Kernel(AdvectionRK4)
+
     if unbeaching:
         kernels += pset.Kernel(BeachTesting_2D)
         kernels += pset.Kernel(UnBeaching)
-    if diffusion:
-        kernels += pset.Kernel(BrownianMotion2D)
-        kernels += pset.Kernel(BeachTesting_2D)
+        if diffusion:
+            kernels += pset.Kernel(BrownianMotion2DUnbeaching)
+            kernels += pset.Kernel(BeachTesting_2D)
+    else:
+        if diffusion:
+            kernels += pset.Kernel(BrownianMotion2D)
 
     kernels += pset.Kernel(periodicBC)
 

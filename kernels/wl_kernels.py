@@ -1,7 +1,7 @@
 from parcels import rng as random
 import math
 
-def AdvectionRK4(particle, fieldset, time):
+def AdvectionRK4Beached(particle, fieldset, time):
     if particle.beached == 0:
         (u1, v1) = fieldset.UV[time, particle.depth, particle.lat, particle.lon]
         lon1, lat1 = (particle.lon + u1*.5*particle.dt, particle.lat + v1*.5*particle.dt)
@@ -41,6 +41,15 @@ def UnBeaching(particle, fieldset, time):
         particle.beached = 0
 
 def BrownianMotion2D(particle, fieldset, time):
+    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
+    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
+    r = 1 / 3.
+    kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
+    particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
+    kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
+    particle.lon += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_zonal / r)
+
+def BrownianMotion2DUnbeaching(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
     Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
     if particle.beached == 0:

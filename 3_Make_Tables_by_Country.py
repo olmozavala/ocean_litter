@@ -4,6 +4,9 @@ import os
 from enum import Enum
 import json
 from utils.ReplaceNames import replace_names
+from config.MainConfig import get_op_config
+from config.params import WorldLitter
+import numpy as np
 
 class C(Enum):
     AfricaName = 1
@@ -21,28 +24,99 @@ def get_reached(data, col_name, col_particle):
         reached[replace_names(c_reached_country)] = [arrived, total]
     return reached
 
-input_folder = '/home/olmozavala/Dropbox/COAPS/Work_Related/Dynamic_Animations_From_Positions/Reformat_Data/reached_data'
-output_folder = '/home/olmozavala/Dropbox/COAPS/Work_Related/Dynamic_Animations_From_Positions/Reformat_Data/output/reached_json'
+def remove_brackets(text):
+    return text.replace('[','').replace(']','').replace(':','').strip()
 
-all_files = os.listdir(input_folder)
+def readto(f):
+    all_lines = f.readlines()
+    country_name = remove_brackets(all_lines[0][33:-1]).lower()
 
-json_object = {}
-for cur_file in all_files:
-    if(cur_file.find(".csv") != -1):
-        print(F"------ Reading file: {cur_file} --------")
-        cur_country = replace_names(cur_file.replace(".csv",""))
-        # data_csv = np.loadtxt(join(input_folder, cur_file), dtype=np.str, delimiter=',')
-        data_csv = pd.read_csv(join(input_folder, cur_file), names=[C.AfricaName,C.AfricaParticles,C.AsiaName,C.AsiaParticles], index_col=False)
+    tot_tons = int(all_lines[0][0:8])
+    data_to = []
+    for c_line in all_lines[2:]:
+        tons = float(c_line[0:8])
+        perc = float(c_line[10:14])
+        name = remove_brackets(c_line[21:-1])
+        tobj = {
+            'name': name,
+            'tons': tons,
+            'perc': perc
+        }
+        data_to.append(tobj)
 
-        # ------------- Iterate over the Africa names -------------
-        data_africa = data_csv.loc[:,[C.AfricaName, C.AfricaParticles]].dropna()
-        reached_africa = get_reached(data_africa, C.AfricaName, C.AfricaParticles)
-        data_asia = data_csv.loc[:,[C.AsiaName, C.AsiaParticles]].dropna()
-        reached_asia = get_reached(data_asia, C.AsiaName, C.AsiaParticles)
+    obj_to = {
+        'name': country_name,
+        'tot_tons': tot_tons,
+        'to': data_to
+    }
+    return obj_to, country_name
 
-        json_object[cur_country] = {'Africa':reached_africa, 'Asia': reached_asia}
 
-json_txt = json.dumps(json_object)
-output_file = join(output_folder,'ReachedTablesData.json')
-f = open(output_file, "w+")
-f.write(json_txt)
+def readfrom(f):
+    all_lines = f.readlines()
+    country_name = remove_brackets(all_lines[0][27:-1]).lower()
+    tot_tons = int(all_lines[0][0:8])
+
+    at_ocean = float(all_lines[1][0:8])
+    at_ocean_perc = float(remove_brackets(all_lines[1][10:14]))
+
+    at_beach = float(all_lines[2][0:8])
+    at_beach_perc = float(all_lines[2][10:14])
+
+    data_from = []
+    for c_line in all_lines[4:]:
+        tons = float(c_line[0:8])
+        perc = float(c_line[10:14])
+        name = remove_brackets(c_line[21:-1])
+        tobj = {
+            'name': name,
+            'tons': tons,
+            'perc': perc
+        }
+        data_from.append(tobj)
+
+    obj_from = {
+        'name': country_name,
+        'tot_tons': tot_tons,
+        'ocean_tons': at_ocean,
+        'ocean_perc': at_ocean_perc,
+        'beach_tons': at_beach,
+        'beach_perc': at_beach_perc,
+        'from': data_from
+    }
+    return obj_from, country_name
+
+
+if __name__ == "__main__":
+    config = get_op_config()
+
+    input_folder = config[WorldLitter.stats_folder]
+    output_folder = config[WorldLitter.output_folder_web]
+    all_files = os.listdir(input_folder)
+
+    json_object = {}
+    for cur_file in all_files:
+        # for cur_file in ["sum_from_ISR.txt"]:
+        if cur_file.find("swp") == -1:
+            if cur_file.find("_from_") != -1:
+                print(F"------ Reading file: {cur_file} --------")
+                f = open(join(input_folder, cur_file), "r")
+                obj_from, country_name = readfrom(f)
+
+                if not(country_name in json_object.keys()):
+                    json_object[country_name] = {}
+                json_object[country_name]['from'] = obj_from
+
+            if cur_file.find("_to_") != -1:
+                print(F"------ Reading file: {cur_file} --------")
+                f = open(join(input_folder, cur_file), "r")
+                obj_from, country_name = readto(f)
+
+                if not(country_name in json_object.keys()):
+                    json_object[country_name] = {}
+                json_object[country_name]['to'] = obj_from
+
+    json_txt = json.dumps(json_object)
+    output_file = join(output_folder,'ReachedTablesData.json')
+    f = open(output_file, "w+")
+    f.write(json_txt)

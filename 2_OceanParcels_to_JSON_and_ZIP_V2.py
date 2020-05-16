@@ -28,7 +28,7 @@ input_file = config[WorldLitter.output_file]
 countries_file_name = config[WorldLitter.countries_file]
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-all_reduce_particles_by = [4]
+all_reduce_particles_by = [4,3]
 # all_reduce_particles_by = [1]
 min_number_particles = 20
 
@@ -108,6 +108,6 @@ for reduce_particles_global in all_reduce_particles_by:
         zf.write(merged_output_file, compress_type=compression)
         zf.close()
 
-    print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
+        print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
 
 nc_file.close()
