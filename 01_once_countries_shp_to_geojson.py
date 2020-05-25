@@ -17,6 +17,8 @@ for sr in reader.shapeRecords():
     # atr = dict(zip(field_names, sr.record))
     name = sr.record['ADMIN']
     continent = sr.record['CONTINENT']
+    # id = sr.record['ADM0_A3']
+    # atr = {'name': name, 'continent': continent, 'id': id}
     atr = {'name': name, 'continent': continent}
     geom = sr.shape.__geo_interface__
     buffer.append(dict(type="Feature", geometry=geom, properties=atr))

@@ -12,6 +12,8 @@ import multiprocessing as mp
 from matplotlib import cm
 import matplotlib as mpl
 import os
+import functools
+from multiprocessing import Pool
 
 def make_plot(LONS, LATS, data, title, file_name):
     # IMPORTANT IT MAY LOOK WRONG ON PYCHARM BUT CORRECT ON THE PNG
@@ -55,65 +57,29 @@ def make_hist(only_acc):
 
     output_file = join(output_histogram_folder, F"{input_file.replace('.nc','')}_histogram_{resolution_txt}")
     output_file_tiff = join(output_tiff_folder, F"{input_file.replace('.nc','')}_histogram_{resolution_txt}.tiff")
-    output_file_beached = join(output_histogram_folder,  F"{input_file.replace('.nc','')}_beached_histogram_{resolution_txt}")
-    output_file_beached_tiff = join(output_tiff_folder,  F"{input_file.replace('.nc','')}_beached_histogram_{resolution_txt}.tiff")
 
     ds = Dataset(file_name, "r", format="NETCDF4")
 
-    lats = ds['lat'][:]
-    lons = ds['lon'][:]
-    beached = ds['beached'][:]
-    time_steps = lats.shape[1]
-
-
     tot_lats = int(180/resolution)
     tot_lons = int(360/resolution)
-    tot_particles = lats.shape[0]
+
+    lats = ds['lat'][:]
+    lons = ds['lon'][:]
+    tot_particles = len(lats)
+
     LATS = np.linspace(-90, 90, tot_lats)
     LONS = np.linspace(-180, 180, tot_lons)
-    if (only_acc):
-        histo = np.ones((tot_lats, tot_lons))
-        beached_histo = np.ones((tot_lats, tot_lons))
-    else:
-        histo = np.ones((time_steps, tot_lats, tot_lons))
-        beached_histo = np.ones((time_steps, tot_lats, tot_lons))
-
-    # Iterate over all the times
-    for c_time in range(time_steps):
-        c_lats = lats[:, c_time]
-        c_lons = lons[:, c_time]
-        c_beached = beached[:, c_time]
-
-        # Iterate over all particles
-        for c_part in range(tot_particles):
-            i = np.argmax(c_lats[c_part] <= LATS)
-            j = np.argmax(c_lons[c_part] <= LONS)
-            if only_acc:
-                histo[i, j] += 1
-                beached_histo[i, j] += c_beached[c_part]
-            else:
-                histo[c_time, i, j] += 1
-                beached_histo[c_time, i, j] += c_beached[c_part]
-
-        # Plot some of the results
-        if c_time % 50 == 0:
-            print(F" Time: {c_time} ")
-            if only_acc:
-                make_plot(LONS, LATS, beached_histo, F"Beached Day {c_time} {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_beached_{c_time}.png"))
-                make_plot(LONS, LATS, histo, F"Day {c_time} {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_{c_time}.png"))
-            else:
-                make_plot(LONS, LATS, beached_histo[c_time], F"Beached Day {c_time} {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_beached_{c_time}.png"))
-                make_plot(LONS, LATS, histo[c_time], F"Day {c_time} {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_{c_time}.png"))
-
 
     # Computing accumulated histogram
-    if only_acc:
-        acum_histo = histo
-        acum_beached = beached_histo
-    else:
-        acum_histo = np.sum(histo, axis=0)
-        acum_beached = np.sum(beached_histo, axis=0)
+    tot_proc = 10
+    with Pool(tot_proc) as pool:
+        acum_histo_par = pool.starmap(parallelSum, [(lats, lons, LATS, LONS, i, tot_proc) for i in range(tot_proc)])
 
+    acum_histo_par = np.array(acum_histo_par)
+    acum_histo = np.sum(acum_histo_par, axis=0)
+    # REVIEW THIS PART!!! THE 12 IS BECAUSE WE ASSUME 12  RELEASES PER YEAR
+    tons_per_particle = ((6.4e6)/(tot_particles * 12))
+    acum_histo = tons_per_particle*acum_histo + 1
     idx = acum_histo == 1
     acum_histo[idx] = np.nan
     # Avoid zeros
@@ -126,22 +92,38 @@ def make_hist(only_acc):
     ds.to_netcdf(F"{output_file}.nc")
     ds.close()
 
-    ds = xr.Dataset({"beached": (("lat", "lon"), acum_beached)})
-    ds = addAttributes(ds, 'beached')
-    ds.to_netcdf(F"{output_file_beached}.nc")
-    ds.close()
-
     make_plot(LONS, LATS, acum_histo, F"Acumulated  {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_Accumulated.png"))
-    make_plot(LONS, LATS, acum_beached, F"Acumulated beached  {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_AccumulatedBeached.png"))
+    # os.system(F"gdal_translate -a_srs EPSG:4326 NETCDF:{output_file}.nc:histo {output_file_tiff}")
 
-    os.system(F"gdal_translate -a_srs EPSG:4326 NETCDF:{output_file}.nc:histo {output_file_tiff}")
-    os.system(F"gdal_translate -a_srs EPSG:4326 NETCDF:{output_file_beached}.nc:beached {output_file_beached_tiff}")
+def parallelSum(lats, lons, LATS, LONS, id_proc, tot_proc):
 
-    if not(only_acc):
-        np.save(output_file, histo)
-        np.save(output_file_beached, beached_histo)
-    # Save the plot by calling plt.savefig() BEFORE plt.show()
-    print("Done!!!")
+    histo = np.zeros((len(LATS), len(LONS)))
+    c_lats = lats.flatten()
+    c_lons = lons.flatten()
+    tot_particles = len(c_lats)
+
+    # Patch to retrieve those below -180 and above 180 (assuming it wont make 2 turns)
+    id_below = c_lons <= -180
+    id_above = c_lons >= 180
+    c_lons[id_below] = c_lons[id_below] + 360
+    c_lons[id_above] = c_lons[id_above] - 360
+    # Iterate over all particles
+    segment_size = int(np.ceil(tot_particles/tot_proc))
+    seg_from = int(segment_size*id_proc)
+    seg_to = int(np.min((segment_size*(id_proc+1), tot_particles)))
+    print(F"Id: {id_proc}, tot_proc: {tot_proc}, tot particles: {tot_particles} from: {seg_from} to: {seg_to}")
+    for c_part in np.arange(seg_to - 1000000, seg_to):
+    # for c_part in np.arange(seg_from, seg_to):
+        i = np.argmax(c_lats[c_part] <= LATS)
+        j = np.argmax(c_lons[c_part] <= LONS)
+        histo[i, j] += 1
+
+        # Plot some of the results
+        if c_part% 100000 == 0:
+            print(F" Time: {c_part} of {tot_particles} ")
+
+    return histo
+
 
 def addAttributes(ds, var_name):
     ds.attrs['Conventions'] = "CF-1.0"
