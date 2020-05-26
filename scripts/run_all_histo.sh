@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #for i in {1..12..1}
-for i in {10..12..1}
+for i in {1..8..1}
 do
     cur_month=$(printf "%02d" $i)
     echo ${cur_month}
