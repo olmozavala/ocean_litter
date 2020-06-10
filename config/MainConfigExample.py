@@ -6,6 +6,10 @@ from os.path import join
 # today_str = "Final_Five_Years_WindsCurrentsDiffusionUnbeaching_MONTH"
 # today_str = "TESTUN_output"
 today_str = "Single_Release_FiveYears_EachMonth_2010_MONTH"
+# today_str = "OneYear_Currents_And_Diffusion2020-05-05_16_36_output.nc"
+# today_str = "OneYear_Currents_And_Wind2020-05-05_16_36_output.nc"
+# today_str = "OneYear_Currents_Winds_Diffusion2020-05-05_16_36_output.nc"
+# today_str = "OneYear_Only_Currents2020-05-05_16_36_output.nc"
 
 def get_preproc_config():
     cur_config = {

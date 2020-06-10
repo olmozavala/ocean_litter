@@ -19,9 +19,9 @@ def outOfBounds(particle, fieldset, time):
 
 
 class PlasticParticle(JITParticle):
-    # age = Variable('age', dtype=np.float32, initial=0.)
-    # beached : 0 sea, 1 beached,  2  please unbeach
+    # beached : 0 sea, 1 after RK, 2 after diffusion, 3 please unbeach, 4 final beached
     beached = Variable('beached', dtype=np.int32, initial=0.)
+    beached_count = Variable('beached_count', dtype=np.int32, initial=0.)
 
 def add_Kh(winds_currents_fieldset, lat, lon, kh):
     kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),

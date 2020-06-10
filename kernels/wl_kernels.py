@@ -17,18 +17,18 @@ def AdvectionRK4Beached(particle, fieldset, time):
         # print("v:", v1, flush=True)
         particle.lon += (u1 + 2*u2 + 2*u3 + u4) / 6. * particle.dt
         particle.lat += (v1 + 2*v2 + 2*v3 + v4) / 6. * particle.dt
-        particle.beached = 2
+        particle.beached = 1
 
 def BeachTesting_2D(particle, fieldset, time):
-    if particle.beached == 2 or particle.beached == 3:
+    if particle.beached == 1 or particle.beached == 2:
         (u, v) = fieldset.UV[time, particle.depth, particle.lat, particle.lon]
         if math.fabs(u) < 1e-14 and math.fabs(v) < 1e-14:
-            particle.beached = 1
+            particle.beached = 3
         else:
             particle.beached = 0
 
 def UnBeaching(particle, fieldset, time):
-    if particle.beached == 1:
+    if particle.beached == 3:
         ub = fieldset.unBeachU[time, particle.depth, particle.lat, particle.lon]
         vb = fieldset.unBeachV[time, particle.depth, particle.lat, particle.lon]
         # print("OLD:", particle)
@@ -39,6 +39,10 @@ def UnBeaching(particle, fieldset, time):
         # print("u:", ub)
         # print("v:", vb, flush=True)
         particle.beached = 0
+        if particle.beached_count > 24:
+            particle.beached = 4
+        else:
+            particle.beached_count += 1
 
 def BrownianMotion2D(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
@@ -58,7 +62,7 @@ def BrownianMotion2DUnbeaching(particle, fieldset, time):
         particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
         kh_zonal = fieldset.Kh_zonal[time, particle.depth, particle.lat, particle.lon]
         particle.lon += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_zonal / r)
-        particle.beached = 3
+        particle.beached = 2
 
 def periodicBC(particle, fieldset, time):
     if particle.lon < fieldset.halo_west:
@@ -86,4 +90,3 @@ def periodicBC(particle, fieldset, time):
 #     mag = math.sqrt(u*u + v*v)*.05
 #     particle.lat += random.uniform(-1., 1.) * mag
 #     particle.lon += random.uniform(-1., 1.) * mag
-
