@@ -29,8 +29,8 @@ countries_file_name = config[WorldLitter.countries_file]
 # Reading the json file with the names and geometries of the countries
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-all_reduce_particles_by = [4,3,2,1]
-# all_reduce_particles_by = [1]
+# all_reduce_particles_by = [6]
+all_reduce_particles_by = [1]
 min_number_particles = 20
 
 # Reading the output from Ocean Parcles

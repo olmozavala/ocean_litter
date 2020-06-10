@@ -15,6 +15,8 @@ import os
 import functools
 from multiprocessing import Pool
 
+np.set_printoptions(precision=4)
+
 def make_plot(LONS, LATS, data, title, file_name):
     # IMPORTANT IT MAY LOOK WRONG ON PYCHARM BUT CORRECT ON THE PNG
     n_colors = 30  # NUmber of color sin the color bar
@@ -41,8 +43,10 @@ def make_hist(only_acc):
     input_file = config[WorldLitter.output_file]
     file_name = join(input_folder, input_file)
 
-    resolution = 1/4  # In degrees
-    resolution_txt = "one_quarter"  # In degrees
+    resolution = 1/8  # In degrees
+    resolution_txt = "one_eighth"  # In degrees
+    # resolution = 1/4  # In degrees
+    # resolution_txt = "one_quarter"  # In degrees
 
     output_histogram_folder = join(input_folder, "histo")
     output_imgs_folder = join(input_folder, "images")
@@ -67,8 +71,8 @@ def make_hist(only_acc):
     lons = ds['lon'][:]
     tot_particles = len(lats)
 
-    LATS = np.linspace(-90, 90, tot_lats)
-    LONS = np.linspace(-180, 180, tot_lons)
+    LATS = np.linspace(-90, 90, tot_lats+1)
+    LONS = np.linspace(-180, 180, tot_lons+1)
 
     # Computing accumulated histogram
     tot_proc = 10
@@ -94,6 +98,8 @@ def make_hist(only_acc):
 
     make_plot(LONS, LATS, acum_histo, F"Acumulated  {input_file}", join(output_imgs_folder, F"{input_file.replace('.nc','')}_Accumulated.png"))
     # os.system(F"gdal_translate -a_srs EPSG:4326 NETCDF:{output_file}.nc:histo {output_file_tiff}")
+    os.system(F"gdal_translate  NETCDF:{output_file}.nc:histo {output_file_tiff}")
+
 
 def parallelSum(lats, lons, LATS, LONS, id_proc, tot_proc):
 
@@ -112,15 +118,14 @@ def parallelSum(lats, lons, LATS, LONS, id_proc, tot_proc):
     seg_from = int(segment_size*id_proc)
     seg_to = int(np.min((segment_size*(id_proc+1), tot_particles)))
     print(F"Id: {id_proc}, tot_proc: {tot_proc}, tot particles: {tot_particles} from: {seg_from} to: {seg_to}")
-    for c_part in np.arange(seg_to - 1000000, seg_to):
-    # for c_part in np.arange(seg_from, seg_to):
-        i = np.argmax(c_lats[c_part] <= LATS)
-        j = np.argmax(c_lons[c_part] <= LONS)
+    for c_part in np.arange(seg_from, seg_to):
+        i = np.argmax(c_lats[c_part] <= LATS) - 1
+        j = np.argmax(c_lons[c_part] <= LONS) - 1
         histo[i, j] += 1
 
         # Plot some of the results
         if c_part% 100000 == 0:
-            print(F" Time: {c_part} of {tot_particles} ")
+            print(F"Proc: {id_proc} Time: {c_part} of {seg_to} ")
 
     return histo
 

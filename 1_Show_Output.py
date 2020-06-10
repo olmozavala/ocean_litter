@@ -75,7 +75,9 @@ if __name__ == "__main__":
     lats = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lons = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
+    # This will plot the output netcdf from ocean parcels
     # plotTrajectoriesFile(file_name)
 
+    # This plots directly the json file
     json_file = F"/var/www/html/data/4/{input_file.replace('.nc','_00.json')}"
     plotJsonFile(json_file)
