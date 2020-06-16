@@ -48,7 +48,8 @@ def set_unbeaching(winds_currents_fieldset, lat, lon, input_file):
     winds_currents_fieldset.add_field(unBeachV, 'unBeachV')
 
 
-def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, unbeaching=True):
+def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
+         unbeaching=True, restart_file=""):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
@@ -111,17 +112,17 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, un
 
     print("Setting up everything.....")
     if unbeaching:
-        if repeat_release:
-            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0,
-                               repeatdt=repeat_release)
-        else:
-            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=PlasticParticle, lon=lon0, lat=lat0)
+        particle_class = PlasticParticle
     else:
-        if repeat_release:
-            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0,
-                               repeatdt=repeat_release)
-        else:
-            pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0)
+        particle_class = JITParticle
+
+    if restart_file != '':
+        pset = ParticleSet.from_particlefile(fieldset=winds_currents_fieldset, pclass=particle_class,
+                                             filename=restart_file, repeatdt=repeat_release)
+    else:
+        pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=particle_class, lon=lon0, lat=lat0,
+                           repeatdt=repeat_release)
+
 
     print(F"Running with {pset.size} number of particles")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
@@ -153,7 +154,7 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, un
 
     print(F"Done time={time.time()-t}.....")
 
-    print("Saving output!!!!!")
+    print(F"Saving output to {output_file}!!!!!")
     # domain = {'N': 31, 'S': 16, 'E': -76, 'W': -98}
     # pset.show(field=winds_currents_fieldset.U, domain=domain)  # Draw current particles
     out_parc_file.export() # Save trajectories to file
@@ -164,15 +165,21 @@ def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1", "True")
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 6:
+    if len(sys.argv) > 6:
         start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
         end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
         winds = str2bool(sys.argv[3])
         diffusion = str2bool(sys.argv[4])
         unbeaching = str2bool(sys.argv[5])
         name = sys.argv[6]
-        print(F"Start date: {start_date} End date: {end_date} winds: {winds} diffusion={diffusion} unbeaching={unbeaching}")
-        main(start_date, end_date, name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)
+        print(F"Start date: {start_date} End date: {end_date} winds={winds} diffusion={diffusion} unbeaching={unbeaching}")
+        if len(sys.argv) > 7:
+            restart_file = sys.argv[7]
+            main(start_date, end_date, name, winds=winds, unbeaching=unbeaching,
+                 diffusion=diffusion, restart_file=restart_file)
+        else:
+            main(start_date, end_date, name, winds=winds, unbeaching=unbeaching,
+                 diffusion=diffusion)
     else:
         print("Not enough parameters, using defaults!!!!")
         main()
