@@ -27,32 +27,30 @@ if __name__ == "__main__":
         part_n = 0
 
         # =================== Computing all the models in 'batches' =====================
-        # # --------- First run, no restart file needed ----------
-        # cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
-        # cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
-        # run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
-        #       F"{winds} {diffusion} {unbeaching} {cur_name}"
-        # print(F"Running: {run}")
-        # os.system(run)
-        #
-        # # --------- Iterate over all the rest of the models, specify the resart file in each case
-        # while(cur_end_date < end_date):
-        #     prev_start_date = start_date
-        #     prev_end_date = cur_end_date
-        #     start_date = cur_end_date + timedelta(days=1) # We need to add one or we will repeat a day
-        #     cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
-        #     # Define the restart file to use (previous output file)
-        #     restart_file = join(config[WorldLitter.output_folder],
-        #                         F"{name}_{prev_start_date.strftime(time_format_red)}-{prev_end_date.strftime(time_format_red)}__{part_n:02d}_{config[WorldLitter.output_file]}")
-        #     restart_file = join(config[WorldLitter.output_folder],
-        #                         F"{name}_{prev_start_date.strftime(time_format_red)}-{prev_end_date.strftime(time_format_red)}__{part_n:02d}_{config[WorldLitter.output_file]}")
-        #     # Define the new output file name
-        #     part_n += 1
-        #     cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
-        #     run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
-        #           F"{winds} {diffusion} {unbeaching} {cur_name} {restart_file}"
-        #     print(F"Running: {run}")
-        #     os.system(run)
+        # --------- First run, no restart file needed ----------
+        cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
+        cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+        run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
+              F"{winds} {diffusion} {unbeaching} {cur_name}"
+        print(F"Running: {run}")
+        os.system(run)
+
+        # --------- Iterate over all the rest of the models, specify the resart file in each case
+        while(cur_end_date < end_date):
+            prev_start_date = start_date
+            prev_end_date = cur_end_date
+            start_date = cur_end_date + timedelta(days=1) # We need to add one or we will repeat a day
+            cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
+            # Define the restart file to use (previous output file)
+            restart_file = join(config[WorldLitter.output_folder],
+                                F"{name}_{prev_start_date.strftime(time_format_red)}-{prev_end_date.strftime(time_format_red)}__{part_n:02d}_{config[WorldLitter.output_file]}")
+            # Define the new output file name
+            part_n += 1
+            cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+            run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
+                  F"{winds} {diffusion} {unbeaching} {cur_name} {restart_file}"
+            print(F"Running: {run}")
+            os.system(run)
 
         # =================== Here we merge all the output files into one ===========================
         start_date = datetime.strptime(sys.argv[1], time_format)

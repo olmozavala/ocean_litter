@@ -2,7 +2,6 @@ from parcels import Field, FieldSet, ParticleSet, Variable, JITParticle, ScipyPa
 from parcels import plotTrajectoriesFile, ErrorCode, VectorField, AdvectionRK4
 import numpy as np
 from datetime import timedelta, datetime, date
-import time
 from os.path import join
 from kernels.wl_kernels import periodicBC, AdvectionRK4Beached, UnBeaching, BeachTesting_2D, BrownianMotion2D, BrownianMotion2DUnbeaching
 import parcels.plotting as pplt
@@ -13,6 +12,13 @@ from config.params import WorldLitter
 from config.MainConfig import get_op_config
 import sys
 from netCDF4 import Dataset
+import os
+import xarray as xr
+import time
+try:
+    from mpi4py import MPI
+except:
+    MPI = None
 
 def outOfBounds(particle, fieldset, time):
     particle.beached = 4
@@ -28,8 +34,8 @@ def add_Kh(winds_currents_fieldset, lat, lon, kh):
                    lon=lon, lat=lat, allow_time_extrapolation=True,
                    fieldtype='Kh_meridional', mesh='spherical')
     kh_zonal = Field('Kh_zonal', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
-                   lon=lon, lat=lat, allow_time_extrapolation=True,
-                   fieldtype='Kh_zonal', mesh='spherical')
+                     lon=lon, lat=lat, allow_time_extrapolation=True,
+                     fieldtype='Kh_zonal', mesh='spherical')
 
     winds_currents_fieldset.add_field(kh_mer, 'Kh_meridional')
     winds_currents_fieldset.add_field(kh_zonal, 'Kh_zonal')
@@ -38,8 +44,8 @@ def set_unbeaching(winds_currents_fieldset, lat, lon, input_file):
     ds = Dataset(input_file, "r+", format="NETCDF4")
 
     unBeachU= Field('unBeachU', ds['unBeachU'][:,:],
-                   lon=lon, lat=lat, allow_time_extrapolation=True,
-                   fieldtype='Kh_meridional', mesh='spherical')
+                    lon=lon, lat=lat, allow_time_extrapolation=True,
+                    fieldtype='Kh_meridional', mesh='spherical')
     unBeachV= Field('unBeachV', ds['unBeachV'][:,:],
                     lon=lon, lat=lat, allow_time_extrapolation=True,
                     fieldtype='Kh_zonal', mesh='spherical')
@@ -77,12 +83,12 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
     lon0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
     #variables = {'U': 'U_combined',
-                 #'V': 'V_combined'}
+    #'V': 'V_combined'}
     variables = {'U': 'surf_u',
                  'V': 'surf_v'}
 
     #dimensions = {'lat': 'lat',
-                  #'lon': 'lon',
+    #'lon': 'lon',
     dimensions = {'lat': 'latitude',
                   'lon': 'longitude',
                   'time': 'time'}
@@ -147,10 +153,10 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
     kernels += pset.Kernel(periodicBC)
 
     pset.execute(kernels,
-                runtime=run_time,
+                 runtime=run_time,
                  dt=dt,
                  output_file=out_parc_file,
-                recovery = {ErrorCode.ErrorOutOfBounds: outOfBounds})
+                 recovery={ErrorCode.ErrorOutOfBounds: outOfBounds})
 
     print(F"Done time={time.time()-t}.....")
 
@@ -164,6 +170,123 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1", "True")
 
+# THis should be improved it was copied from 0_WorldLItterSplitter to work with mpi
+def runWithRestart():
+    execution_days = 2
+    time_format = "%Y-%m-%d:%H"
+    time_format_red = "%Y_%m_%d"
+    config = get_op_config()
+
+    start_date = datetime.strptime(sys.argv[1], time_format)
+    end_date = datetime.strptime(sys.argv[2], time_format)
+    winds = str2bool(sys.argv[3])
+    diffusion = str2bool(sys.argv[4])
+    unbeaching = str2bool(sys.argv[5])
+    name = sys.argv[6]
+    part_n = 0
+
+    # =================== Computing all the models in 'batches' =====================
+    # --------- First run, no restart file needed ----------
+    cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
+    cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+    run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
+          F"{winds} {diffusion} {unbeaching} {cur_name}"
+    print(F"Running: {run}")
+    main(start_date, cur_end_date, cur_name, winds=winds, unbeaching=unbeaching,
+         diffusion=diffusion)
+
+    # --------- Iterate over all the rest of the models, specify the resart file in each case
+    while(cur_end_date < end_date):
+        prev_start_date = start_date
+        prev_end_date = cur_end_date
+        start_date = cur_end_date + timedelta(days=1) # We need to add one or we will repeat a day
+        cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
+        # Define the restart file to use (previous output file)
+        restart_file = join(config[WorldLitter.output_folder],
+                            F"{name}_{prev_start_date.strftime(time_format_red)}-{prev_end_date.strftime(time_format_red)}__{part_n:02d}_{config[WorldLitter.output_file]}")
+
+        if MPI:
+            print(F"----- Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... ---------")
+            MPI.COMM_WORLD.Barrier()
+            print("Done waiting!", flush=True)
+
+        # Define the new output file name
+        part_n += 1
+        cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+        run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
+              F"{winds} {diffusion} {unbeaching} {cur_name} {restart_file}"
+        print(F"Running with: {run}")
+        main(start_date, cur_end_date, cur_name, winds=winds, unbeaching=unbeaching,
+             diffusion=diffusion)
+        # diffusion=diffusion, restart_file=restart_file)
+
+    # =================== Here we merge all the output files into one ===========================
+    if MPI:
+        print(F"----Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... -------------" , flush=True)
+        MPI.COMM_WORLD.Barrier()
+        print("Done waiting!")
+
+    exec_next = True
+    if MPI:
+        if MPI.COMM_WORLD.Get_rank() != 0:
+            exec_next = False # The next code we want that only a single CPU executes it
+
+    if exec_next:
+        start_date = datetime.strptime(sys.argv[1], time_format)
+        end_date = datetime.strptime(sys.argv[2], time_format)
+        cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
+        part_n = 0
+        while(cur_end_date < end_date):
+            input_file = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+            restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
+            print(F"Reading restart file: {restart_file}")
+            if part_n == 0:
+                merged_data = xr.open_dataset(restart_file)
+                timevar = merged_data['time'].copy()
+                trajectory = merged_data['trajectory'].copy()
+                lat = merged_data['lat'].copy()
+                lon = merged_data['lon'].copy()
+                z = merged_data['z'].copy()
+            else:
+                temp_data = xr.open_dataset(restart_file)
+                timevar = xr.concat([timevar, temp_data['time']], dim='obs')
+                trajectory = xr.concat([trajectory, temp_data['trajectory']], dim='obs')
+                lat = xr.concat([lat, temp_data['lat']], dim='obs')
+                lon = xr.concat([lon, temp_data['lon']], dim='obs')
+                z = xr.concat([z, temp_data['z']], dim='obs')
+            start_date = cur_end_date + timedelta(days=1) # We need to add one or we will repeat a day
+            cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
+            part_n += 1
+            print("Done adding this file!")
+
+        # Last call
+        input_file = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+        restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
+        temp_data = xr.open_dataset(restart_file)
+        timevar = xr.concat([timevar, temp_data['time']], dim='obs')
+        trajectory = xr.concat([trajectory, temp_data['trajectory']], dim='obs')
+        lat = xr.concat([lat, temp_data['lat']], dim='obs')
+        lon = xr.concat([lon, temp_data['lon']], dim='obs')
+        z = xr.concat([z, temp_data['z']], dim='obs')
+
+        # Here we have all the variables merged, we need to create a new Dataset and save it
+        ds = xr.Dataset(
+            {
+                "time": (("traj", "obs"), timevar),
+                "trajectory": (("traj", "obs"), trajectory),
+                "lat": (("traj", "obs"), lat),
+                "lon": (("traj", "obs"), lon),
+                "z": (("traj", "obs"), z),
+            }
+        )
+        ds.attrs = temp_data.attrs
+
+        output_file = join(config[WorldLitter.output_folder], F"{name}{config[WorldLitter.output_file]}")
+        ds.to_netcdf(output_file)
+
+        print("REAL DONE DONE DONE!")
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 6:
         start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
@@ -174,9 +297,11 @@ if __name__ == "__main__":
         name = sys.argv[6]
         print(F"Start date: {start_date} End date: {end_date} winds={winds} diffusion={diffusion} unbeaching={unbeaching}")
         if len(sys.argv) > 7:
-            restart_file = sys.argv[7]
-            main(start_date, end_date, name, winds=winds, unbeaching=unbeaching,
-                 diffusion=diffusion, restart_file=restart_file)
+            # restart_file = sys.argv[7]
+            # main(start_date, end_date, name, winds=winds, unbeaching=unbeaching,
+            #      diffusion=diffusion, restart_file=restart_file)
+            print("Running with restart!!!!! Splitter wont work!!!")
+            runWithRestart()
         else:
             main(start_date, end_date, name, winds=winds, unbeaching=unbeaching,
                  diffusion=diffusion)
