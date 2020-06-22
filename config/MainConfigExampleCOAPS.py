@@ -22,7 +22,7 @@ def get_op_config():
         WorldLitter.loc_folder: "data/release_locations_reduced",
         WorldLitter.unbeach_file: join(data_folder,"HYCOM/unbeaching100000ms.nc"),
         # WorldLitter.output_folder: "/data/UN_Litter_data/Output/",
-        WorldLitter.output_folder: join(data_folder,"output"),
+        WorldLitter.output_folder: join(data_folder,"output","Difussion_and_Winds"),
         WorldLitter.output_file: F"{today_str}.nc",
         WorldLitter.stats_folder: "data/reached_data_tables",
         WorldLitter.lat_files: ["coasts_all_y.csv", "rivers_all_y.csv"],

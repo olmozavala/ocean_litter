@@ -42,9 +42,10 @@ def plotJsonFile(file_name):
     with open(file_name) as f:
         data = json.load(f)
         tot_times = len(data['Yemen']['lat_lon'][0][0])
-        for c_time_step in range(tot_times):
+        print(F"Total times in this file: {tot_times}")
+        for c_time_step in np.arange(0,tot_times,10):
             print(c_time_step)
-            fig = plt.figure(figsize=(20,10))
+            # fig = plt.figure(figsize=(20,10))
             ax = plt.subplot(1, 1, 1, projection=ccrs.PlateCarree())
             lats = []
             lons = []
@@ -76,8 +77,9 @@ if __name__ == "__main__":
     lons = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
     # This will plot the output netcdf from ocean parcels
-    plotTrajectoriesFile(file_name)
+    # plotTrajectoriesFile(file_name)
 
     # This plots directly the json file
-    # json_file = F"/var/www/html/data/4/{input_file.replace('.nc','_00.json')}"
-    # plotJsonFile(json_file)
+    # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"
+    json_file = F"/var/www/html/data/6/Single_Release_FiveYears_EachMonth_2010_01_04.json"
+    plotJsonFile(json_file)

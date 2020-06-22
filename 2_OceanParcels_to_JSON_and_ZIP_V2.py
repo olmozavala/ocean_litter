@@ -11,8 +11,10 @@ from config.MainConfig import get_op_config
 from config.params import WorldLitter
 import matplotlib.pyplot as plt
 
-
 compression = zipfile.ZIP_DEFLATED
+all_reduce_particles_by = [4, 6]
+min_number_particles = 20
+particlesEveryThisTimeSteps = 200  # How many timesteps save in each file
 
 def myfmt(r): # 'Round to 2 decimals'
     return float(F"{r:.2f}")
@@ -29,9 +31,6 @@ countries_file_name = config[WorldLitter.countries_file]
 # Reading the json file with the names and geometries of the countries
 df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
-# all_reduce_particles_by = [6]
-all_reduce_particles_by = [1]
-min_number_particles = 20
 
 # Reading the output from Ocean Parcles
 nc_file = Dataset(join(input_folder, input_file), "r", format="NETCDF4")
@@ -49,7 +48,6 @@ for name in all_vars.keys():
 tot_time_steps = nc_file.dimensions['obs'].size
 glob_num_particles = nc_file.dimensions['traj'].size
 print(F"Total number of timesteps: {tot_time_steps} Total number of particles: {tot_time_steps * glob_num_particles} ")
-particlesEveryThisTimeSteps = 100  # How many timesteps save in each file
 
 # 4936, 731 (Asia)
 traj = all_vars['trajectory']

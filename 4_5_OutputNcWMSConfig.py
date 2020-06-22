@@ -6,8 +6,8 @@ if __name__ == "__main__":
     for i in range(1,13):
         try:
             # file_name_local = F"/home/data/UN_Litter_data/output/histo/Single_Release_FiveYears_EachMonth_2010_{i:02d}_histogram_one_eighth.nc"
-            file_name_local = F"/data/UN_Litter_data/output/histo/Single_Release_FiveYears_EachMonth_2010_{i:02d}_histogram_one_eighth.nc"
-            file_name = F"/Net/work/ozavala/WorldLitterOutput/histograms/Single_Release_FiveYears_EachMonth_2010_{i:02d}_histogram_one_eighth.nc"
+            file_name_local = F"/data/UN_Litter_data/output/Difussion_and_Winds/histo/Single_Release_FiveYears_EachMonth_2010_{i:02d}_histogram_one_eighth.nc"
+            file_name = F"/Net/work/ozavala/WorldLitterOutput/WindsCurrentsDiffusion/histo/Single_Release_FiveYears_EachMonth_2010_{i:02d}_histogram_one_eighth.nc"
             ds = Dataset(file_name_local, "r", format="NETCDF4")
             histo = ds['histo']
             max_val = np.nanmax(ds['histo'])

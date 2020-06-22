@@ -18,8 +18,8 @@ def get_preproc_config():
 
     return {**get_op_config(), **cur_config}
 
-# data_folder = "/data/UN_Litter_data"
-data_folder = "/home/data/UN_Litter_data"
+data_folder = "/data/UN_Litter_data"
+# data_folder = "/home/data/UN_Litter_data"
 
 def get_op_config():
     cur_config = {
