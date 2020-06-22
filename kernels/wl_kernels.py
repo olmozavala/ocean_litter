@@ -28,6 +28,10 @@ def BeachTesting_2D(particle, fieldset, time):
             particle.beached = 0
 
 def UnBeaching(particle, fieldset, time):
+    days_to_delete = 10 # If this amount of days the particle stays beached, then we deleted it
+    # We let the particle as final beached (4) one time step, after that we delete it.
+    if particle.beached == 4:
+        particle.delete()
     if particle.beached == 3:
         ub = fieldset.unBeachU[time, particle.depth, particle.lat, particle.lon]
         vb = fieldset.unBeachV[time, particle.depth, particle.lat, particle.lon]
@@ -35,14 +39,14 @@ def UnBeaching(particle, fieldset, time):
         particle.lon += ub * particle.dt
         particle.lat += vb * particle.dt
         # print("NEW:", particle)
-        # print("dt:", particle.dt)
         # print("u:", ub)
         # print("v:", vb, flush=True)
         particle.beached = 0
-        if particle.beached_count > 24:
+        if particle.beached_count > ((24*days_to_delete)/(particle.dt/3600)): # TODO hardcoded the number of timesteps this should be releated to the dt
             particle.beached = 4
         else:
             particle.beached_count += 1
+
 
 def BrownianMotion2D(particle, fieldset, time):
     """Kernel for simple Brownian particle diffusion in zonal and meridional direction.

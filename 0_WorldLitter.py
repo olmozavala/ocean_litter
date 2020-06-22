@@ -23,9 +23,9 @@ except:
 def outOfBounds(particle, fieldset, time):
     particle.beached = 4
 
-
 class PlasticParticle(JITParticle):
-    # beached : 0 sea, 1 after RK, 2 after diffusion, 3 please unbeach, 4 final beached
+# class PlasticParticle(ScipyParticle):
+    # beached : 0 sea, 1 after RK, 2 after diffusion, 3 please unbeach, 4 final beached (and out of bounds)
     beached = Variable('beached', dtype=np.int32, initial=0.)
     beached_count = Variable('beached_count', dtype=np.int32, initial=0.)
 
@@ -54,8 +54,7 @@ def set_unbeaching(winds_currents_fieldset, lat, lon, input_file):
     winds_currents_fieldset.add_field(unBeachV, 'unBeachV')
 
 
-def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
-         unbeaching=True, restart_file=""):
+def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, unbeaching=True, restart_file=""):
     config = get_op_config()
     years = config[WorldLitter.years]
     base_folder = config[WorldLitter.base_folder]
@@ -75,8 +74,8 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
 
     file_names = read_files(base_folder, years, wind=winds, start_date=start_date, end_date=end_date)
     if len(file_names) == 0:
-        print("ERROR: We couldn't read any file!")
-        return 0
+        print(F"ERROR: We couldn't read any file! BaseFolder:{base_folder}")
+        exit()
 
     print("Reading initial positions.....")
     lat0 = functools.reduce(lambda a, b: np.concatenate((a,b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
@@ -130,7 +129,7 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
                            repeatdt=repeat_release)
 
 
-    print(F"Running with {pset.size} number of particles")
+    print(F"Running with {pset.size} particles")
     out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
 
@@ -170,11 +169,16 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True,
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1", "True")
 
+def get_file_name(name, start_date, end_date, part_n):
+    time_format_red = "%Y-%m-%d"
+    return F"{name}_{start_date.strftime(time_format_red)}_{end_date.strftime(time_format_red)}__{part_n:02d}_"
+
+
 # THis should be improved it was copied from 0_WorldLItterSplitter to work with mpi
 def runWithRestart():
-    execution_days = 2
+    execution_days = 30
     time_format = "%Y-%m-%d:%H"
-    time_format_red = "%Y_%m_%d"
+    time_format_red = "%Y-%m-%d"
     config = get_op_config()
 
     start_date = datetime.strptime(sys.argv[1], time_format)
@@ -188,43 +192,47 @@ def runWithRestart():
     # =================== Computing all the models in 'batches' =====================
     # --------- First run, no restart file needed ----------
     cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
-    cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+    cur_name = get_file_name(name, start_date, cur_end_date, part_n)
     run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
           F"{winds} {diffusion} {unbeaching} {cur_name}"
     print(F"Running: {run}")
-    main(start_date, cur_end_date, cur_name, winds=winds, unbeaching=unbeaching,
-         diffusion=diffusion)
-
-    # --------- Iterate over all the rest of the models, specify the resart file in each case
+    main(start_date, cur_end_date, cur_name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)
+    #
+    # # --------- Iterate over all the rest of the models, specify the resart file in each case
     while(cur_end_date < end_date):
         prev_start_date = start_date
         prev_end_date = cur_end_date
-        start_date = cur_end_date + timedelta(days=1) # We need to add one or we will repeat a day
+        start_date = cur_end_date # We need to add one or we will repeat a day
         cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
         # Define the restart file to use (previous output file)
-        restart_file = join(config[WorldLitter.output_folder],
-                            F"{name}_{prev_start_date.strftime(time_format_red)}-{prev_end_date.strftime(time_format_red)}__{part_n:02d}_{config[WorldLitter.output_file]}")
+        restart_file = join(config[WorldLitter.output_folder], F"{get_file_name(name, prev_start_date, prev_end_date, part_n)}{config[WorldLitter.output_file]}")
 
         if MPI:
-            print(F"----- Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... ---------")
+            print(F"----- Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... ---------", flush=True)
             MPI.COMM_WORLD.Barrier()
             print("Done waiting!", flush=True)
 
+        print(F" ================================================================================= ")
+        print(F" ================================================================================= ")
+        print(F" ================================================================================= ")
+
         # Define the new output file name
         part_n += 1
-        cur_name = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
-        run = F"python 0_WorldLitter.py {start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
-              F"{winds} {diffusion} {unbeaching} {cur_name} {restart_file}"
+        cur_name = get_file_name(name, start_date, cur_end_date, part_n)
+        run = F"{start_date.strftime(time_format)} {cur_end_date.strftime(time_format)} " \
+              F"winds:{winds}  diff:{diffusion}  unbeaching:{unbeaching}  name:{cur_name}  restart:{restart_file}"
         print(F"Running with: {run}")
-        main(start_date, cur_end_date, cur_name, winds=winds, unbeaching=unbeaching,
-             diffusion=diffusion)
-        # diffusion=diffusion, restart_file=restart_file)
+        main(start_date, cur_end_date, cur_name, winds=winds, unbeaching=unbeaching, diffusion=diffusion, restart_file=restart_file)
 
     # =================== Here we merge all the output files into one ===========================
     if MPI:
         print(F"----Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... -------------" , flush=True)
         MPI.COMM_WORLD.Barrier()
-        print("Done waiting!")
+        print("Done waiting!", flush=True)
+
+    print(F" ================================================================================= ")
+    print(F" ================================================================================= ")
+    print(F" ================================================================================= ")
 
     exec_next = True
     if MPI:
@@ -237,7 +245,7 @@ def runWithRestart():
         cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
         part_n = 0
         while(cur_end_date < end_date):
-            input_file = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+            input_file = get_file_name(name, start_date, cur_end_date, part_n)
             restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
             print(F"Reading restart file: {restart_file}")
             if part_n == 0:
@@ -247,38 +255,63 @@ def runWithRestart():
                 lat = merged_data['lat'].copy()
                 lon = merged_data['lon'].copy()
                 z = merged_data['z'].copy()
+                if(unbeaching):
+                    beached = merged_data['beached'].copy()
+                    beached_count = merged_data['beached_count'].copy()
+
             else:
                 temp_data = xr.open_dataset(restart_file)
-                timevar = xr.concat([timevar, temp_data['time']], dim='obs')
-                trajectory = xr.concat([trajectory, temp_data['trajectory']], dim='obs')
-                lat = xr.concat([lat, temp_data['lat']], dim='obs')
-                lon = xr.concat([lon, temp_data['lon']], dim='obs')
-                z = xr.concat([z, temp_data['z']], dim='obs')
-            start_date = cur_end_date + timedelta(days=1) # We need to add one or we will repeat a day
+                timevar = xr.concat([timevar, temp_data['time'][:,1:]], dim='obs')
+                trajectory = xr.concat([trajectory, temp_data['trajectory'][:,1:]], dim='obs')
+                lat = xr.concat([lat, temp_data['lat'][:,1:]], dim='obs')
+                lon = xr.concat([lon, temp_data['lon'][:,1:]], dim='obs')
+                z = xr.concat([z, temp_data['z'][:,1:]], dim='obs')
+                if(unbeaching):
+                    beached = xr.concat([beached, temp_data['beached'][:,1:]], dim='obs')
+                    beached_count = xr.concat([beached_count, temp_data['beached_count'][:,1:]], dim='obs')
+
+            start_date = cur_end_date # We need to add one or we will repeat a day
             cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
             part_n += 1
             print("Done adding this file!")
 
         # Last call
-        input_file = F"{name}_{start_date.strftime(time_format_red)}-{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
+        input_file = F"{name}_{start_date.strftime(time_format_red)}_{cur_end_date.strftime(time_format_red)}__{part_n:02d}_"
         restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
         temp_data = xr.open_dataset(restart_file)
-        timevar = xr.concat([timevar, temp_data['time']], dim='obs')
-        trajectory = xr.concat([trajectory, temp_data['trajectory']], dim='obs')
-        lat = xr.concat([lat, temp_data['lat']], dim='obs')
-        lon = xr.concat([lon, temp_data['lon']], dim='obs')
-        z = xr.concat([z, temp_data['z']], dim='obs')
+        # The first location is already saved on the previous file
+        timevar = xr.concat([timevar, temp_data['time'][:,1:]], dim='obs')
+        trajectory = xr.concat([trajectory, temp_data['trajectory'][:,1:]], dim='obs')
+        lat = xr.concat([lat, temp_data['lat'][:,1:]], dim='obs')
+        lon = xr.concat([lon, temp_data['lon'][:,1:]], dim='obs')
+        z = xr.concat([z, temp_data['z'][:,1:]], dim='obs')
+        if(unbeaching):
+            beached = xr.concat([beached, temp_data['beached'][:,1:]], dim='obs')
+            beached_count = xr.concat([beached_count, temp_data['beached_count'][:,1:]], dim='obs')
 
         # Here we have all the variables merged, we need to create a new Dataset and save it
-        ds = xr.Dataset(
-            {
-                "time": (("traj", "obs"), timevar),
-                "trajectory": (("traj", "obs"), trajectory),
-                "lat": (("traj", "obs"), lat),
-                "lon": (("traj", "obs"), lon),
-                "z": (("traj", "obs"), z),
-            }
-        )
+        if(unbeaching):
+            ds = xr.Dataset(
+                {
+                    "time": (("traj", "obs"), timevar),
+                    "trajectory": (("traj", "obs"), trajectory),
+                    "lat": (("traj", "obs"), lat),
+                    "lon": (("traj", "obs"), lon),
+                    "z": (("traj", "obs"), z),
+                    "beached": (("traj", "obs"), beached),
+                    "beached_count": (("traj", "obs"), beached_count),
+                }
+            )
+        else:
+            ds = xr.Dataset(
+                {
+                    "time": (("traj", "obs"), timevar),
+                    "trajectory": (("traj", "obs"), trajectory),
+                    "lat": (("traj", "obs"), lat),
+                    "lon": (("traj", "obs"), lon),
+                    "z": (("traj", "obs"), z),
+                }
+            )
         ds.attrs = temp_data.attrs
 
         output_file = join(config[WorldLitter.output_folder], F"{name}{config[WorldLitter.output_file]}")

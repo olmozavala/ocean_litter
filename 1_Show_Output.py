@@ -1,7 +1,6 @@
 from datetime import datetime
 from os.path import join
 from netCDF4 import Dataset
-# import gmplot
 import numpy as np
 import functools
 from parcels.scripts.plottrajectoriesfile import plotTrajectoriesFile
@@ -16,36 +15,35 @@ from config.MainConfig import get_op_config
 from config.params import WorldLitter
 # -------------- Plot with OP ---------------
 
-# -------------- Info about variables ---------------
-# ds = Dataset(file_name, "r+", format="NETCDF4")
-# this_many = 10
-# print(F"Variables: {ds.variables.keys()}")
-# print(F"Trajectory: {ds.variables['trajectory'].shape}:{ds.variables['trajectory'][0:this_many]}")
-# print(F"time: {ds.variables['time'].shape}:{ds.variables['time'][0:this_many]}")
-# print(F"lat: {ds.variables['lat'].shape}:{ds.variables['lat'][0:this_many]}")
-# print(F"lon: {ds.variables['lon'].shape}:{ds.variables['lon'][0:this_many]}")
-# print(F"z: {ds.variables['z'].shape}:{ds.variables['z'][0:this_many]}")
-# print(F"beached: {ds.variables['beached'].shape}:{ds.variables['beached'][0:this_many]}")
-#
+def plotDataOZ(file_name):
+    import gmplot
+    # -------------- Info about variables ---------------
+    ds = Dataset(file_name, "r+", format="NETCDF4")
+    this_many = 10
+    print(F"Variables: {ds.variables.keys()}")
+    print(F"Trajectory: {ds.variables['trajectory'].shape}:{ds.variables['trajectory'][0:this_many]}")
+    print(F"time: {ds.variables['time'].shape}:{ds.variables['time'][0:this_many]}")
+    print(F"lat: {ds.variables['lat'].shape}:{ds.variables['lat'][0:this_many]}")
+    print(F"lon: {ds.variables['lon'].shape}:{ds.variables['lon'][0:this_many]}")
+    print(F"z: {ds.variables['z'].shape}:{ds.variables['z'][0:this_many]}")
+    print(F"beached: {ds.variables['beached'].shape}:{ds.variables['beached'][0:this_many]}")
 
-# -------------- Location in a map ---------------
-# gmap3 = gmplot.GoogleMapPlotter(0, 0, 3)
-# gmap3.scatter(lats, lons, '# FF0000', size=80, marker=False)
-#
-# gmap3.draw("sopas.html")
 
-def plotOceanParcelsOutput(file_name):
-    plotTrajectoriesFile(file_name, mode='2d')
-    print("Done!")
+    # -------------- Location in a map ---------------
+    gmap3 = gmplot.GoogleMapPlotter(0, 0, 3)
+    gmap3.scatter(lats, lons, '# FF0000', size=80, marker=False)
+
+    gmap3.draw("sopas.html")
+
 
 def plotJsonFile(file_name):
     with open(file_name) as f:
         data = json.load(f)
         tot_times = len(data['Yemen']['lat_lon'][0][0])
         print(F"Total times in this file: {tot_times}")
-        for c_time_step in np.arange(0,tot_times,10):
+        for c_time_step in np.arange(0,tot_times,1):
             print(c_time_step)
-            # fig = plt.figure(figsize=(20,10))
+            fig = plt.figure(figsize=(20,10))
             ax = plt.subplot(1, 1, 1, projection=ccrs.PlateCarree())
             lats = []
             lons = []
@@ -78,8 +76,10 @@ if __name__ == "__main__":
 
     # This will plot the output netcdf from ocean parcels
     # plotTrajectoriesFile(file_name)
+    plotDataOZ(file_name)
 
     # This plots directly the json file
     # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"
-    json_file = F"/var/www/html/data/6/Single_Release_FiveYears_EachMonth_2010_01_04.json"
+    # json_file = F"/var/www/html/data/6/Single_Release_FiveYears_EachMonth_2010_01_04.json"
+    json_file = F"/var/www/html/data/6/JUN22JUN22Test_Unbeaching_00.json"
     plotJsonFile(json_file)
