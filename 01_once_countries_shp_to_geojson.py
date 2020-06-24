@@ -4,6 +4,7 @@ from os.path import join
 
 input_folder = '/home/olmozavala/Dropbox/TestData/GIS/Shapefiles/World/high_res'
 input_file = join(input_folder, 'ne_50m_admin_0_countries.shp')
+# input_file = join(input_folder, 'World_Countries__Generalized_.shp')
 output_folder = '/var/www/html/data'
 output_file = join(output_folder, 'countries.json')
 
@@ -14,12 +15,18 @@ field_names = [field[0] for field in fields]
 print(field_names)
 buffer = []
 for sr in reader.shapeRecords():
-    # atr = dict(zip(field_names, sr.record))
+    # For the ne file version, it contains the continent
+    atr = dict(zip(field_names, sr.record))
     name = sr.record['ADMIN']
     continent = sr.record['CONTINENT']
-    # id = sr.record['ADM0_A3']
-    # atr = {'name': name, 'continent': continent, 'id': id}
-    atr = {'name': name, 'continent': continent}
+    id = sr.record['ADM0_A3']
+    atr = {'name': name, 'continent': continent, 'id': id}
+    # atr = {'name': name, 'continent': continent}
+
+    # ----- For the World file version, it contains the continent
+    # name = sr.record['COUNTRY']
+    # atr = {'name': name, 'id': id}
+
     geom = sr.shape.__geo_interface__
     buffer.append(dict(type="Feature", geometry=geom, properties=atr))
 
