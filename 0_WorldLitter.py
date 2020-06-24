@@ -151,6 +151,7 @@ def main(start_date = -1, end_date = -1, name='', winds=True, diffusion=True, un
 
     kernels += pset.Kernel(periodicBC)
 
+    # When unbeaching the order of the kernels are: RK4, BeachTesting, Unbeaching, Diffussioon, BeachTesting
     pset.execute(kernels,
                  runtime=run_time,
                  dt=dt,

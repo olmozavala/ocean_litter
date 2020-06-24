@@ -15,6 +15,7 @@ compression = zipfile.ZIP_DEFLATED
 all_reduce_particles_by = [4, 6]
 min_number_particles = 20
 particlesEveryThisTimeSteps = 200  # How many timesteps save in each file
+BEACHED = True  # Indicate if we are testing the beached particles
 
 def myfmt(r): # 'Round to 2 decimals'
     return float(F"{r:.2f}")
@@ -49,12 +50,14 @@ tot_time_steps = nc_file.dimensions['obs'].size
 glob_num_particles = nc_file.dimensions['traj'].size
 print(F"Total number of timesteps: {tot_time_steps} Total number of particles: {tot_time_steps * glob_num_particles} ")
 
-# 4936, 731 (Asia)
 traj = all_vars['trajectory']
 time = all_vars['time']
 lat = all_vars['lat']
 lon = all_vars['lon']
 Z = all_vars['z']
+if BEACHED:
+    beached = all_vars['beached']
+    beached_count = all_vars['beached_count']
 
 # Iterate over the options to reduce the number of particles
 for reduce_particles_global in all_reduce_particles_by:
@@ -89,10 +92,19 @@ for reduce_particles_global in all_reduce_particles_by:
             # Append the particles
             cur_lat_all_part = lat[red_particles_for_country].filled()
             cur_lon_all_part = lon[red_particles_for_country].filled()
-            countries[cur_country_name] = {'lat_lon': [vecfmt(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist(),
-                                                      vecfmt(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist()],
-                                           'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
-                                           'continent': df_country_list.loc[cur_country_name]['continent']}
+            if BEACHED:
+                cur_beached_all_part = beached[red_particles_for_country].filled() == 4
+                countries[cur_country_name] = {'lat_lon': [vecfmt(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist(),
+                                                           vecfmt(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist()],
+                                               'beached': [cur_beached_all_part.tolist()],
+                                               'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
+                                               'continent': df_country_list.loc[cur_country_name]['continent']}
+            else:
+                countries[cur_country_name] = {'lat_lon': [vecfmt(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist(),
+                                                          vecfmt(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist()],
+                                               'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
+                                               'continent': df_country_list.loc[cur_country_name]['continent']}
+
             cur_idx += 3  # Hardcoded because the way the country list is made
 
         print(" Saving json file .....")

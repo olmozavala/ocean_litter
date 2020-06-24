@@ -29,9 +29,12 @@ def BeachTesting_2D(particle, fieldset, time):
 
 def UnBeaching(particle, fieldset, time):
     days_to_delete = 10 # If this amount of days the particle stays beached, then we deleted it
+
     # We let the particle as final beached (4) one time step, after that we delete it.
-    if particle.beached == 4:
-        particle.delete()
+    # if particle.beached == 4:
+    #     particle.delete()  # This is causing problems because th enumber of particles decreases
+        # return
+
     if particle.beached == 3:
         ub = fieldset.unBeachU[time, particle.depth, particle.lat, particle.lon]
         vb = fieldset.unBeachV[time, particle.depth, particle.lat, particle.lon]
