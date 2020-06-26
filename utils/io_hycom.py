@@ -1,8 +1,20 @@
+from parcels import Field
 import os
+from netCDF4 import Dataset
 from os.path import join
 from datetime import datetime
+import numpy as np
 
 def read_files(base_folder, years, wind=False, start_date=0, end_date=0):
+    """ Reads the files based on the start and end date. Depending on the wind var, it decides which
+    folder to read
+    :param base_folder:
+    :param years:
+    :param wind:
+    :param start_date:
+    :param end_date:
+    :return:
+    """
     all_files = []
     for year in years:
         if wind:
@@ -33,13 +45,42 @@ def read_files(base_folder, years, wind=False, start_date=0, end_date=0):
     all_files.sort()
     return all_files
 
-def read_files_combined(base_folder, years):
-    all_files = []
-    for year in years:
-        c_year_path = join(base_folder, F'{year}')
-        files = os.listdir(c_year_path)
-        for c_file in files:
-            all_files.append(join(c_year_path, c_file))
+def add_unbeaching_field(field_set, lat, lon, input_file):
+    """
+    Adds the unbeaching field from the specified input_file into the current field_set
+    :param field_set:
+    :param lat:
+    :param lon:
+    :param input_file:
+    :return:
+    """
+    ds = Dataset(input_file, "r+", format="NETCDF4")
 
-    all_files.sort()
-    return all_files
+    unBeachU= Field('unBeachU', ds['unBeachU'][:,:],
+                    lon=lon, lat=lat, allow_time_extrapolation=True,
+                    fieldtype='Kh_meridional', mesh='spherical')
+    unBeachV= Field('unBeachV', ds['unBeachV'][:,:],
+                    lon=lon, lat=lat, allow_time_extrapolation=True,
+                    fieldtype='Kh_zonal', mesh='spherical')
+
+    field_set.add_field(unBeachU, 'unBeachU')
+    field_set.add_field(unBeachV, 'unBeachV')
+
+def add_Kh(field_set, lat, lon, kh):
+    """
+    Adds constant diffusion coefficient to the fieldset
+    :param field_set:
+    :param lat:
+    :param lon:
+    :param kh:
+    :return:
+    """
+    kh_mer = Field('Kh_meridional', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
+                   lon=lon, lat=lat, allow_time_extrapolation=True,
+                   fieldtype='Kh_meridional', mesh='spherical')
+    kh_zonal = Field('Kh_zonal', kh * np.ones((len(lat), len(lon)), dtype=np.float32),
+                     lon=lon, lat=lat, allow_time_extrapolation=True,
+                     fieldtype='Kh_zonal', mesh='spherical')
+
+    field_set.add_field(kh_mer, 'Kh_meridional')
+    field_set.add_field(kh_zonal, 'Kh_zonal')

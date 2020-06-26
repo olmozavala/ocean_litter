@@ -34,8 +34,6 @@ def get_op_config():
         WorldLitter.stats_folder: "data/reached_data_tables",
         WorldLitter.lat_files: ["coasts_all_y.csv", "rivers_all_y.csv"],
         WorldLitter.lon_files: ["coasts_all_x.csv", "rivers_all_x.csv"],
-        WorldLitter.start_date: datetime(2010, 1, 1, 0, 0, 0),
-        WorldLitter.end_date: datetime(2010, 1, 18, 0, 0, 0),
         # lat_files = ["river_cat_1_x.csv"]
         # lon_files = ["river_cat_1_y.csv"]
         # WorldLitter.wind_factor: 0.035,

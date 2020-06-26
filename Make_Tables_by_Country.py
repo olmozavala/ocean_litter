@@ -4,7 +4,7 @@ from os.path import join
 import os
 from enum import Enum
 import json
-from utils.ReplaceNames import replace_names
+from utils.several_utils import replace_names
 from config.MainConfig import get_op_config
 from config.params import WorldLitter
 import numpy as np

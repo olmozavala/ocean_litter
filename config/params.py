@@ -15,11 +15,9 @@ class WorldLitter(Enum):
     wind_factor = 7
     repeat_release = 8
     output_freq = 9
-    end_date = 10
     output_folder_web = 11
     countries_file = 12
     dt = 13
-    start_date = 14
     unbeach_file = 15
 
 
