@@ -29,8 +29,8 @@ def remove_brackets(text):
 def readto(f, json_names, json_ids):
     all_lines = f.readlines()
 
-    table_country_name = remove_brackets(all_lines[0][27:-1]).lower()
-    country_id = remove_brackets(all_lines[0][27:31])
+    table_country_name = remove_brackets(all_lines[0][30:-1]).lower()
+    country_id = remove_brackets(all_lines[0][30:34])
     try:
         country_name = json_names[json_ids.index(country_id)].lower()
 
@@ -66,8 +66,8 @@ def readfrom(f, json_names, json_ids):
     """
     all_lines = f.readlines()
 
-    table_country_name = remove_brackets(all_lines[0][27:-1]).lower()
-    country_id = remove_brackets(all_lines[0][22:27])
+    table_country_name = remove_brackets(all_lines[0][30:-1]).lower()
+    country_id = remove_brackets(all_lines[0][25:30])
     tot_tons = int(all_lines[0][0:8])
 
     at_ocean = float(all_lines[1][0:8])
@@ -131,10 +131,9 @@ if __name__ == "__main__":
         all_json_names = [x['properties']['name'] for x in data['features']]
         all_ids = [x['properties']['id'] for x in data['features']]
 
-        for i, name in enumerate(all_json_names):
-            if name.lower().find("congo") != -1:
-                print(F"{name} id: {all_ids[i]}")
-        exit()
+        # for i, name in enumerate(all_json_names):
+        #     if name.lower().find("congo") != -1:
+        #         print(F"{name} id: {all_ids[i]}")
 
         all_names = []
         json_object = {}
