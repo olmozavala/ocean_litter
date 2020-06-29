@@ -110,5 +110,6 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
     # domain = {'N': 31, 'S': 16, 'E': -76, 'W': -98}
     # pset.show(field=winds_currents_fieldset.U, domain=domain)  # Draw current particles
     out_parc_file.export() # Save trajectories to file
+    out_parc_file.close()
     # plotTrajectoriesFile(output_file) # Plotting trajectories
     print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!")
