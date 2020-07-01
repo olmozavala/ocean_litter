@@ -1,3 +1,4 @@
+import gc
 from config.params import WorldLitter
 from os.path import join
 from datetime import timedelta
@@ -116,4 +117,6 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
     del kernels
     del main_fieldset
     # plotTrajectoriesFile(output_file) # Plotting trajectories
+    print("Forcing gc.collect")
+    gc.collect()
     print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!")
