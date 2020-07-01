@@ -18,4 +18,6 @@ def str2bool(v):
 
 def get_file_name(name, start_date, end_date, part_n):
     time_format_red = "%Y-%m-%d"
-    return F"{name}_{start_date.strftime(time_format_red)}_{end_date.strftime(time_format_red)}__{part_n:02d}"
+    # return F"{name}_{start_date.strftime(time_format_red)}_{end_date.strftime(time_format_red)}__{part_n:02d}"
+    return F"{name}_{start_date.strftime(time_format_red)}_{end_date.strftime(time_format_red)}"
+
