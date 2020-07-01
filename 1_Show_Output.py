@@ -15,10 +15,10 @@ from config.MainConfig import get_op_config
 from config.params import WorldLitter
 # -------------- Plot with OP ---------------
 
-def plotDataOZ(file_name):
+def plotDataOZ(file_name, usebeached=True, dt=1):
     # -------------- Info about variables ---------------
     ds = Dataset(file_name, "r+", format="NETCDF4")
-    this_many = 10
+    # this_many = 10
     # print(F"Variables: {ds.variables.keys()}")
     # print(F"Trajectory: {ds.variables['trajectory'].shape}:{ds.variables['trajectory'][0:this_many]}")
     # print(F"time: {ds.variables['time'].shape}:{ds.variables['time'][0:this_many]}")
@@ -29,41 +29,44 @@ def plotDataOZ(file_name):
     # print(F"beached_count: {ds.variables['beached_count'].shape}:{ds.variables['beached_count'][0:this_many]}")
 
     tot_times = ds.variables['trajectory'].shape[1]
-    # for c_time_step in np.arange(0,tot_times,1):
-    for c_time_step in np.arange(11,tot_times,1):
+    for c_time_step in np.arange(0,tot_times,dt):
         print(F"------------------ {c_time_step} ----------------------")
         fig = plt.figure(figsize=(20,10))
 
         lats = ds.variables['lat'][:,c_time_step]
         lons = ds.variables['lon'][:,c_time_step]
-        beached = ds.variables['beached'][:,c_time_step]
-        beached_count = ds.variables['beached_count'][:,c_time_step]
         trajectory = ds.variables['trajectory'][:,c_time_step]
 
-        id0 = beached == 0
-        id1 = beached == 1
-        id2 = beached == 2
-
-        if c_time_step == 11:
-            id3 = beached == 3
-            id4 = beached == 4
-        else:
-            id3 = np.logical_or(id3, beached == 3)
-            id4 = np.logical_or(id4, beached == 4)
-            id4 = np.logical_or(id4, beached.mask)
-
-        print(beached[id4])
-        print(beached_count[id4])
-        print(trajectory[id4])
-
         title = F'Current time step: {c_time_step}'
-        # plotScatter(lats[id0], lons[id0], 'b', title)
-        # plotScatter(lats[id1], lons[id1], 'r', title)
-        # plotScatter(lats[id2], lons[id2], 'g', title)
-        # plotScatter(lats[id3], lons[id3], 'm', title)
-        plotScatter(lats[id4], lons[id4], 'y', title)
-        # plt.show()
-        # plt.close()
+        if usebeached:
+            beached = ds.variables['beached'][:,c_time_step]
+            beached_count = ds.variables['beached_count'][:,c_time_step]
+            id0 = beached == 0
+            id1 = beached == 1
+            id2 = beached == 2
+
+            if c_time_step == 0:
+                id3 = beached == 3
+                id4 = beached == 4
+            else:
+                id3 = np.logical_or(id3, beached == 3)
+                id4 = np.logical_or(id4, beached == 4)
+                id4 = np.logical_or(id4, beached.mask)
+
+            print(beached[id4])
+            print(beached_count[id4])
+            print(trajectory[id4])
+
+            # plotScatter(lats[id0], lons[id0], 'b', title)
+            # plotScatter(lats[id1], lons[id1], 'r', title)
+            # plotScatter(lats[id2], lons[id2], 'g', title)
+            # plotScatter(lats[id3], lons[id3], 'm', title)
+            plotScatter(lats[id4], lons[id4], 'y', title)
+        else:
+            plotScatter(lats, lons, 'y', title)
+
+        plt.show()
+        plt.close()
 
 
 def plotScatter(lats, lons, color='b',title=''):
@@ -115,8 +118,10 @@ if __name__ == "__main__":
     # plotTrajectoriesFile(file_name)
     # file_name = "/data/UN_Litter_data/output/JUN22_2010-01-01_2010-01-31__00_JUN22JUN22Test_Unbeaching.nc"
     # file_name = "/data/UN_Litter_data/output/JUN22_2010-01-31_2010-03-02__01_JUN22JUN22Test_Unbeaching.nc"
-    file_name = "/data/UN_Litter_data/output/JUN22_2010-03-02_2010-04-01__02_JUN22JUN22Test_Unbeaching.nc"
-    plotDataOZ(file_name)
+    # file_name = "/data/UN_Litter_data/output/JUN22_2010-03-02_2010-04-01__02_JUN22JUN22Test_Unbeaching.nc"
+    file_name = "/data/UN_Litter_data/output/FiveYearComparison/NoWinds_YesDiffusion_2010_01.nc"
+    # file_name = "/data/UN_Litter_data/output/BK/Single_Release_FiveYears_2010_01_NoWinds_WithDiff_2010-12-27_2011-01-26__01.nc"
+    plotDataOZ(file_name, usebeached=False, dt=50)
 
     # This plots directly the json file
     # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"

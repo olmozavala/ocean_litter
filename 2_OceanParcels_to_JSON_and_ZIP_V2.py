@@ -15,7 +15,7 @@ compression = zipfile.ZIP_DEFLATED
 all_reduce_particles_by = [4, 6]
 min_number_particles = 20
 particlesEveryThisTimeSteps = 200  # How many timesteps save in each file
-BEACHED = True  # Indicate if we are testing the beached particles
+BEACHED = False  # Indicate if we are testing the beached particles
 
 def myfmt(r): # 'Round to 2 decimals'
     return float(F"{r:.2f}")

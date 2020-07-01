@@ -28,7 +28,7 @@ def runWithRestart(execution_days, config, start_date, end_date, winds, diffusio
           F"unbeaching={unbeaching} name={cur_name}")
 
     # In this case we run our first set of dates from a restart file
-    if (restart_file!='') and (os.path.exists(restart_file)):
+    if (restart_file != '') and (os.path.exists(restart_file)):
         sequential(start_date, cur_end_date, config, cur_name, winds=winds, unbeaching=unbeaching, diffusion=diffusion,
                    restart_file=restart_file)
     else:
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             execution_days = int(sys.argv[8])
             if os.path.exists(restart_file):
                 print("Running from restart!!!!!")
-                runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name)
+                runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name, restart_file=restart_file)
             else:
                 print("Running with restart, first run without restart!!!!!")
                 runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name)

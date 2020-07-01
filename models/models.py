@@ -69,6 +69,7 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
         particle_class = JITParticle
 
     if restart_file != '':
+        print(F"Using restart file {restart_file}")
         pset = ParticleSet.from_particlefile(fieldset=main_fieldset, pclass=particle_class,
                                              filename=restart_file, repeatdt=repeat_release)
     else:
