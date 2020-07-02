@@ -76,7 +76,7 @@ if __name__ == "__main__":
         name = sys.argv[6]
         config = get_op_config()
         print(F"Start date: {start_date} End date: {end_date} winds={winds} diffusion={diffusion} unbeaching={unbeaching}")
-        if len(sys.argv) >= 7:
+        if len(sys.argv) >= 8:
             restart_file = sys.argv[7]
             execution_days = int(sys.argv[8])
             if os.path.exists(restart_file):
