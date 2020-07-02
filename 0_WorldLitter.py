@@ -34,6 +34,10 @@ def runWithRestart(execution_days, config, start_date, end_date, winds, diffusio
     else:
         sequential(start_date, cur_end_date, config, cur_name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)
 
+    if MPI:
+        print(F"----- Waiting for all proc to finish.....", flush=True)
+        MPI.COMM_WORLD.Barrier()
+
     # # --------- Iterate over all the rest of the models, specify the resart file in each case
     while(cur_end_date < end_date):
         prev_start_date = start_date
@@ -43,10 +47,6 @@ def runWithRestart(execution_days, config, start_date, end_date, winds, diffusio
         # Define the restart file to use (previous output file)
         restart_file = join(config[WorldLitter.output_folder], F"{get_file_name(name, prev_start_date, prev_end_date, part_n)}{config[WorldLitter.output_file]}")
 
-        if MPI:
-            print(F"----- Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... ---------", flush=True)
-            MPI.COMM_WORLD.Barrier()
-            print("Done waiting!", flush=True)
 
         print(F" ================================================================================= ")
         print(F" ================================================================================= ")
@@ -59,11 +59,11 @@ def runWithRestart(execution_days, config, start_date, end_date, winds, diffusio
           F"unbeaching={unbeaching} name={cur_name}")
         sequential(start_date, cur_end_date, config, cur_name, winds=winds, unbeaching=unbeaching, diffusion=diffusion, restart_file=restart_file)
 
-    # =================== Here we merge all the output files into one ===========================
-    if MPI:
-        print(F"----Waiting for file {part_n:02d} to be saved proc {MPI.COMM_WORLD.Get_rank()} ... -------------" , flush=True)
-        MPI.COMM_WORLD.Barrier()
-        print("Done waiting!", flush=True)
+        # =================== Here we merge all the output files into one ===========================
+        if MPI:
+            print(F"----Waiting for file to be saved proc {MPI.COMM_WORLD.Get_rank()} ... -------------", flush=True)
+            MPI.COMM_WORLD.Barrier()
+            print("Done!", flush=True)
 
 
 if __name__ == "__main__":

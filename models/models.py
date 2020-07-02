@@ -10,9 +10,14 @@ from utils.io_hycom import add_Kh, add_unbeaching_field
 from mykernels.custom_particles import LitterParticle
 from mykernels.wl_kernels import *
 import time
+try:
+    from mpi4py import MPI
+except:
+    MPI = None
 
 def sequential(start_date, end_date, config, name='', winds=True, diffusion=True, unbeaching=True, restart_file=""):
-    years = config[WorldLitter.years]
+    # years = config[WorldLitter.years]
+    years = np.arange(start_date.year, end_date.year+1)
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]
     output_file = join(config[WorldLitter.output_folder], name)
@@ -112,6 +117,11 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
     # domain = {'N': 31, 'S': 16, 'E': -76, 'W': -98}
     # pset.show(field=main_fieldset.U, domain=domain)  # Draw current particles
     out_parc_file.export() # Save trajectories to file
+
+    if MPI:
+        print(F"----- Waiting for file to be saved proc {MPI.COMM_WORLD.Get_rank()} ... ---------", flush=True)
+        MPI.COMM_WORLD.Barrier()
+
     out_parc_file.close()
     del pset
     del kernels
@@ -119,4 +129,5 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
     # plotTrajectoriesFile(output_file) # Plotting trajectories
     print("Forcing gc.collect")
     gc.collect()
-    print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!")
+
+    print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!", flush=True)
