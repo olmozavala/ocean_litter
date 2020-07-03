@@ -8,7 +8,7 @@ inc_per_run=1
 
 t=0
 c_start_date=$(date --date="${start_date_str} +$((t)) days")
-c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days +%Y-%m-%d:0")
+c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days +%Y-%m-%d")
 end_date=$(date --date="${end_date_str}")
 
 c_start_date_sec=$(date --date="${start_date_str} +$((t)) days" "+%s")
@@ -18,23 +18,19 @@ while [ $c_start_date_sec -lt $end_date_sec ]
 do
   prev_start_date=$c_start_date
   prev_end_date=$c_end_date
-  c_start_date_sec=$(date --date="${start_date_str} +$((t)) days" "+%s")
-
-  c_start_date=$(date --date="${start_date_str} +$((t)) days" "+%Y-%m-%d")
-  c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days" "+%Y-%m-%d")
-  echo "======================="
-  echo $c_start_date
-  echo $c_end_date
-  echo $c_start_date_sec
+  echo "====================== NEW RUN t=$t ================================"
   if [ $t -eq  0 ]
   then
-    cmd="mpirun -np 8 python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False $run_name"
+    cmd="mpirun -np 8 python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False ${run_name}_${c_start_date}_${c_end_date}"
   else
     cmd="mpirun -np 8 python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
   fi
   echo $cmd
-  `$cmd`
-  t=$[$t+inc_per_run]
+  `$cmd > 'CurrentRun.log'`
+  t=$[$t+$inc_per_run]
+  c_start_date_sec=$(date --date="${start_date_str} +$((t)) days" "+%s")
+  c_start_date=$(date --date="${start_date_str} +$((t)) days" "+%Y-%m-%d")
+  c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days" "+%Y-%m-%d")
 done
 
 

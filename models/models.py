@@ -122,12 +122,12 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
         print(F"----- Waiting for file to be saved proc {MPI.COMM_WORLD.Get_rank()} ... ---------", flush=True)
         MPI.COMM_WORLD.Barrier()
 
-    out_parc_file.close()
-    del pset
-    del kernels
-    del main_fieldset
-    # plotTrajectoriesFile(output_file) # Plotting trajectories
-    print("Forcing gc.collect")
-    gc.collect()
+    # out_parc_file.close()
+    # del pset
+    # del kernels
+    # del main_fieldset
+    # # plotTrajectoriesFile(output_file) # Plotting trajectories
+    # print("Forcing gc.collect")
+    # gc.collect()
 
     print("Done!!!!!!!!!!!! YEAH BABE!!!!!!!!", flush=True)
