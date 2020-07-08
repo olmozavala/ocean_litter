@@ -46,7 +46,7 @@ do
     cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
   fi
   echo $cmd
-  #`$cmd > "${run_name}.log"`
+  `$cmd > "${run_name}.log"`
   t=$[$t+$inc_per_run]
   prev_start_date=$c_start_date
   prev_end_date=$c_end_date
@@ -61,4 +61,8 @@ do
   fi
 done
 
+
+cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_MergeRuns.py ${start_date_str}:0 ${end_date_str}:0 False ${run_name} ${inc_per_run}"
+echo $cmd
+`$cmd`
 
