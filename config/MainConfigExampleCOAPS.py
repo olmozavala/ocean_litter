@@ -4,6 +4,10 @@ from datetime import timedelta, datetime, date
 from os.path import join
 
 today_str = "Single_Release_FiveYears_EachMonth_2010_MONTH"
+#main_name = "NoWinds_NoDiffusion_NoUnbeaching"
+# main_name = "NoWinds_YesDiffusion_NoUnbeaching"
+# main_name = "YesWinds_NoDiffusion_NoUnbeaching"
+# main_name = "YesWinds_YesDiffusion_NoUnbeaching"
 
 def get_preproc_config():
     cur_config = {

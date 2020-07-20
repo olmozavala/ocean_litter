@@ -5,11 +5,12 @@ from os.path import join
 
 # today_str = "Final_Five_Years_WindsCurrentsDiffusionUnbeaching_MONTH"
 # today_str = "TESTUN_output"
-today_str = "Single_Release_FiveYears_EachMonth_2010_MONTH"
 # today_str = "OneYear_Currents_And_Diffusion2020-05-05_16_36_output.nc"
 # today_str = "OneYear_Currents_And_Wind2020-05-05_16_36_output.nc"
 # today_str = "OneYear_Currents_Winds_Diffusion2020-05-05_16_36_output.nc"
 # today_str = "OneYear_Only_Currents2020-05-05_16_36_output.nc"
+
+today_str = "YesWinds_YesDiffusion_NoUnbeaching_2010_MONTH"
 
 def get_preproc_config():
     cur_config = {
@@ -28,8 +29,8 @@ def get_op_config():
         WorldLitter.base_folder: join(data_folder,"HYCOM"),
         WorldLitter.loc_folder: "data/release_locations_reduced",
         WorldLitter.unbeach_file: join(data_folder,"HYCOM/unbeaching100000ms.nc"),
-        # WorldLitter.output_folder: "/data/UN_Litter_data/Output/",
-        WorldLitter.output_folder: join(data_folder,"output"),
+        # WorldLitter.output_folder: join(data_folder,"output"),
+        WorldLitter.output_folder: join(data_folder,"output","YesWinds_YesDiffusion_NoUnbeaching"),
         WorldLitter.output_file: F"{today_str}.nc",
         WorldLitter.stats_folder: "data/reached_data_tables",
         WorldLitter.lat_files: ["coasts_all_y.csv", "rivers_all_y.csv"],

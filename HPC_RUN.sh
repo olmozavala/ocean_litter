@@ -12,7 +12,7 @@ module load intel-openmpi
 module load anaconda3.7.3
 
 start_date_str="2010-01-01"
-end_date_str="2010-01-06"
+end_date_str="2014-01-06"
 output_path="/gpfs/home/osz09/scratch/output/"
 run_name="NoWinds_YesDiffusion_2010_01_NoSplit"
 inc_per_run=1
@@ -32,9 +32,9 @@ do
   echo "====================== NEW RUN t=$t ================================"
   if [ $t -eq  0 ]
   then
-    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 False True False  ${run_name}_${c_start_date}_${c_end_date}"
+    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 False True False  ${run_name}_${c_start_date}_${c_end_date}"
   else
-    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
+    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 False True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
   fi
   echo $cmd
   `$cmd > 'CurrentRun.log'`
