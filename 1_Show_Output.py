@@ -121,8 +121,8 @@ if __name__ == "__main__":
     # file_name = "/data/UN_Litter_data/output/JUN22_2010-03-02_2010-04-01__02_JUN22JUN22Test_Unbeaching.nc"
     # file_name = "/data/UN_Litter_data/output/FiveYearComparison/NoWinds_YesDiffusion_2010_01.nc"
     # file_name = "/data/UN_Litter_data/output/BK/Single_Release_FiveYears_2010_01_NoWinds_WithDiff_2010-12-27_2011-01-26__01.nc"
-    file_name = "/home/data/UN_Litter_data/output/YesWinds_YesDiffusion_NoUnbeaching/YesWind_YesDiffusion_2014_06.nc"
-    plotDataOZ(file_name, usebeached=False, dt=2)
+    file_name = "/data/UN_Litter_data/output/YesWinds_YesDiffusion_NoUnbeaching/YesWinds_YesDiffusion_NoUnbeaching_2014_09.nc"
+    plotDataOZ(file_name, usebeached=False, dt=5)
 
     # This plots directly the json file
     # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"

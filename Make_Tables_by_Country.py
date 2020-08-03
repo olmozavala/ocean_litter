@@ -12,7 +12,9 @@ from shapely.geometry import Polygon, Point, MultiPoint
 from config.MainConfig import get_preproc_config
 from config.params import WorldLitter, Preproc
 import shapely.speedups
+import matplotlib.pyplot as plt
 
+# sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
 def get_reached(data, col_name, col_particle):
     reached = {}
     for c_reached_country in data[col_name].values:
@@ -116,7 +118,6 @@ if __name__ == "__main__":
     # lon_files = config[WorldLitter.lon_files]
     # geo_countries = gpd.GeoDataFrame.from_file(input_folder+file_countries)
     # print(geo_countries['ADMIN'])
-
     config = get_op_config()
 
     input_folder = config[WorldLitter.stats_folder]

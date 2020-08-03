@@ -32,6 +32,7 @@ def get_op_config():
         # WorldLitter.output_folder: join(data_folder,"output"),
         WorldLitter.output_folder: join(data_folder,"output","YesWinds_YesDiffusion_NoUnbeaching"),
         WorldLitter.output_file: F"{today_str}.nc",
+        # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
         WorldLitter.stats_folder: "data/reached_data_tables",
         WorldLitter.lat_files: ["coasts_all_y.csv", "rivers_all_y.csv"],
         WorldLitter.lon_files: ["coasts_all_x.csv", "rivers_all_x.csv"],
