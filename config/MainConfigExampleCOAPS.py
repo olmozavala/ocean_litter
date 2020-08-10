@@ -35,7 +35,7 @@ def get_op_config():
         # lon_files = ["river_cat_1_y.csv"]
         # WorldLitter.wind_factor: 0.035,
         # WorldLitter.repeat_release: timedelta(hours=0),  # 61
-        WorldLitter.repeat_release: False,
+        WorldLitter.repeat_release: None,
         WorldLitter.output_freq: timedelta(hours=24),  # 24
         WorldLitter.dt: timedelta(hours=1), # 1 hour 
         WorldLitter.output_folder_web: "/var/www/html/data",

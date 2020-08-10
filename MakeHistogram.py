@@ -43,8 +43,8 @@ def make_hist(only_acc):
     input_file = config[WorldLitter.output_file]
     file_name = join(input_folder, input_file)
 
-    resolution = 1/8  # In degrees
-    resolution_txt = "one_eighth"  # In degrees
+    resolution = 1/10  # In degrees
+    resolution_txt = "one_tenth"  # In degrees
     # resolution = 1/4  # In degrees
     # resolution_txt = "one_quarter"  # In degrees
 

@@ -17,6 +17,9 @@ def read_files(base_folder, years, wind=False, start_date=0, end_date=0):
     """
     all_files = []
     for year in years:
+        # 2019 — ocean current
+        # 2019w — wind filed
+        # 2019c — ocean current+1% wind combined
         if wind:
             c_year_path = join(base_folder, F'{year}c')
         else:

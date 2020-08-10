@@ -76,11 +76,12 @@ if __name__ == "__main__":
         name = sys.argv[6]
         config = get_op_config()
         print(F"Start date: {start_date} End date: {end_date} winds={winds} diffusion={diffusion} unbeaching={unbeaching}")
+        print(F"Name: {name}")
         if len(sys.argv) >= 8:
             restart_file = sys.argv[7]
             execution_days = int(sys.argv[8])
             if os.path.exists(restart_file):
-                print("Running from restart!!!!!")
+                print(F"Running from restart ({execution_days})!!!!!  {restart_file} ")
                 runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name, restart_file=restart_file)
             else:
                 print("Running with restart, first run without restart!!!!!")

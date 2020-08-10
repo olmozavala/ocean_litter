@@ -59,6 +59,7 @@ def mergeFiles(config, name, start_date, end_date, execution_days, unbeaching):
             print("Done adding this file!")
 
         # Last call
+        print("Adding last file and merging all....")
         input_file = get_file_name(name, start_date, cur_end_date, part_n)
         restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
         temp_data = xr.open_dataset(restart_file)

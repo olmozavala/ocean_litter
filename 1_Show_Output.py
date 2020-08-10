@@ -65,13 +65,14 @@ def plotDataOZ(file_name, usebeached=True, dt=1):
         else:
             plotScatter(lats, lons, 'y', title)
 
-        plt.show()
+        # plt.show()
+        plt.savefig(F"/data/UN_Litter_data/output/OutputImages/{c_time_step:04d}.png")
         plt.close()
 
 
 def plotScatter(lats, lons, color='b',title=''):
     ax = plt.subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    ax.scatter(lons, lats, color=color)
+    ax.scatter(lons, lats, color=color, s=1)
     ax.coastlines()
     ax.set_title(title, fontsize=30)
     # plt.savefig(file_name.replace('json','png'), bbox_inches='tight')
@@ -121,8 +122,11 @@ if __name__ == "__main__":
     # file_name = "/data/UN_Litter_data/output/JUN22_2010-03-02_2010-04-01__02_JUN22JUN22Test_Unbeaching.nc"
     # file_name = "/data/UN_Litter_data/output/FiveYearComparison/NoWinds_YesDiffusion_2010_01.nc"
     # file_name = "/data/UN_Litter_data/output/BK/Single_Release_FiveYears_2010_01_NoWinds_WithDiff_2010-12-27_2011-01-26__01.nc"
-    file_name = "/data/UN_Litter_data/output/YesWinds_YesDiffusion_NoUnbeaching/YesWinds_YesDiffusion_NoUnbeaching_2014_09.nc"
-    plotDataOZ(file_name, usebeached=False, dt=5)
+    # file_name = "/data/UN_Litter_data/output/Continue_YesWinds_YesDiffusion_NoUnbeaching_2015_01_2015-01-01_2015-01-31.nc"
+    # file_name = "/data/UN_Litter_data/output/Continue_YesWinds_YesDiffusion_NoUnbeaching_2015_01_2015-01-31_2015-03-02.nc"
+    # file_name = "/data/UN_Litter_data/output/Continue_YesWinds_YesDiffusion_NoUnbeaching_2015_01_2015-03-02_2015-04-01.nc"
+    file_name = "/data/UN_Litter_data/output/TenYears_YesWinds_YesDiffusion_NoUnbeaching_2010_01.nc"
+    plotDataOZ(file_name, usebeached=False, dt=10)
 
     # This plots directly the json file
     # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"
