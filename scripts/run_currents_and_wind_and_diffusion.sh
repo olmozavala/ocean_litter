@@ -10,5 +10,5 @@
 module load intel-openmpi
 module load anaconda3.7.3
 
-srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py '2010-01-01:0' '2011-01-01:0' 'True' 'True' 'True' 'OneYear_Currents_Winds_Diffusion' > OneYear_Currents_Winds_Diffusion.log
+srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py '2010-01-01:0' '2011-01-01:0' True True True 'OneYear_Currents_Winds_Diffusion' > OneYear_Currents_Winds_Diffusion.log
 
