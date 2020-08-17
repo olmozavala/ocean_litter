@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Iterate years
-for j in {10..14..1}
+for j in {12..12..1}
 do
     cur_year=$(printf "%02d" $j)
     # Iterate Months
-    for i in {1..12..1}
+    for i in {11..11..1}
     do
         cur_month=$(printf "%02d" $i)
         cur_month=$(printf "%02d" $i)
