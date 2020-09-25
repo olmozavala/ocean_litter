@@ -16,3 +16,10 @@ cmd="rm slurm-*"
 echo $cmd
 `$cmd`
 
+cmd="rm merge_20*"
+echo $cmd
+`$cmd`
+
+cmd="rm Merge_m*"
+echo $cmd
+`$cmd`

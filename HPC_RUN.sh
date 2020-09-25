@@ -36,33 +36,13 @@ fi
 
 while [ $c_start_date_sec -lt $end_date_sec ]
 do
-  echo "====================== NEW RUN t=$t ================================"
-  if [ $t -eq  0 ]
-  then
-    #cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 False True False  ${run_name}_${c_start_date}_${c_end_date}"
-    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False  ${run_name}_${c_start_date}_${c_end_date}"
-  else
-    #cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 False True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
-    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
-  fi
-  echo $cmd
-  `$cmd > "${run_name}.log"`
-  t=$[$t+$inc_per_run]
-  prev_start_date=$c_start_date
-  prev_end_date=$c_end_date
-  c_start_date_sec=$(date --date="${start_date_str} +$((t)) days" "+%s")
-  c_start_date=$(date --date="${start_date_str} +$((t)) days" "+%Y-%m-%d")
-  c_end_date_sec=$(date --date="${start_date_str} +$((t+inc_per_run)) days" "+%s")
-  if [ $c_end_date_sec -lt $end_date_sec ]
-  then
-      c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days" "+%Y-%m-%d")
-  else
-      c_end_date=$(date --date="${end_date_str}" "+%Y-%m-%d")
-  fi
+    cur_year=$(printf "%02d" $j)
+    # Iterate Months
+    for i in {1..12..1}
+    do
+        cur_month=$(printf "%02d" $i)
+        echo 'Year: 20'${cur_year} 'Month:'${cur_month}
+        sed --expression="s/MONTH/${cur_month}/g" --expression="s/YEAR/${cur_year}/g" generalrun_hpc.sh > run20${cur_year}_${cur_month}.sh
+        sbatch run20${cur_year}_${cur_month}.sh
+    done
 done
-
-
-cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_MergeRuns.py ${start_date_str}:0 ${end_date_str}:0 False ${run_name} ${inc_per_run}"
-echo $cmd
-`$cmd`
-
