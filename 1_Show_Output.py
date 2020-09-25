@@ -1,79 +1,141 @@
 from datetime import datetime
-from os.path import join
+import os
+from os.path import join, exists
 from netCDF4 import Dataset
 import numpy as np
 import functools
 # from parcels.scripts.plottrajectoriesfile import plotTrajectoriesFile
 import json
 import matplotlib.pyplot as plt
-import multiprocessing as mp
 from matplotlib import cm
 import cartopy.crs as ccrs
 import matplotlib as mpl
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 
 from config.MainConfig import get_op_config
 from config.params import WorldLitter
+from multiprocessing import Pool
+
 # -------------- Plot with OP ---------------
 
-def plotDataOZ(file_name, usebeached=True, dt=1):
+def dateFromCF(str_date):
+    sp = str_date.split(' ')
+    # For the moment it assumes it is in days 'days since 2010-01-01 00:00:00'
+    return datetime.strptime(sp[2],'%Y-%m-%d')
+
+
+def plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, start_year, end_year, dt=1):
+    """
+    It plots the ACCUMULATED or NOT particles from all the files
+    :param input_data_folder:
+    :param start_year:
+    :param end_year:
+    :param dt:
+    :return:
+    """
+
+    # Only for
+    tot_days = (end_year-start_year)*365
+    start_date = datetime.strptime(str(start_year),'%Y')
+
+    open_files = []
+    for c_day in np.arange(0, tot_days, dt):
+        print(F"------- {c_day}---------")
+        # Released months
+        c_date = start_date + timedelta(days=int(c_day))
+        months = (c_date.year - start_date.year)*12  + c_date.month - start_date.month
+
+        # Iterate over all the files that should contribute to the image
+        fig = plt.figure(figsize=(20,10))
+        ax = plt.subplot(1, 1, 1, projection=ccrs.PlateCarree())
+        for c_month in range(0, months + 1):
+            c_file_year = (start_date + relativedelta(months=int(c_month))).year
+            c_file_month = (start_date + relativedelta(months=int(c_month))).month
+            skip_days = c_day - (c_date - datetime.strptime(F"{c_file_year}-{c_file_month}",'%Y-%m')).days
+
+            if len(open_files) <= c_month:
+                file_name = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_{c_file_year}_{(c_file_month):02d}.nc"
+                print(F"Reading new file: {file_name}")
+                open_files.append(Dataset(join(input_data_folder, file_name), "r", format="NETCDF4"))
+
+            c_time_step = c_day - skip_days
+            # lats = open_files[c_month].variables['lat'][:,c_time_step]
+            # lons = open_files[c_month].variables['lon'][:,c_time_step]
+            ax.scatter(open_files[c_month].variables['lon'][:,c_time_step], open_files[c_month].variables['lat'][:,c_time_step], color='c', s=1)
+
+        title = F"{start_date.strftime('%Y-%m-%d')} - {c_date.strftime('%Y-%m-%d')}"
+        ax.coastlines()
+        ax.set_title(title, fontsize=30)
+
+        # plt.show()
+        plt.savefig(F"{output_folder}/{start_date.strftime('%Y_%m')}_{c_day:04d}.png")
+        plt.close()
+
+
+def plotOceanParcelOutputParallel(TOT_PROC, procid, input_data_folder, output_folder, file_name, usebeached=True, dt=1, ):
     # -------------- Info about variables ---------------
-    ds = Dataset(file_name, "r+", format="NETCDF4")
+    if not(exists(output_folder)):
+        os.makedirs(output_folder)
+
+    ds = Dataset(join(input_data_folder, file_name), "r", format="NETCDF4")
     # this_many = 10
     # print(F"Variables: {ds.variables.keys()}")
     # print(F"Trajectory: {ds.variables['trajectory'].shape}:{ds.variables['trajectory'][0:this_many]}")
     # print(F"time: {ds.variables['time'].shape}:{ds.variables['time'][0:this_many]}")
     # print(F"lat: {ds.variables['lat'].shape}:{ds.variables['lat'][0:this_many]}")
-    # print(F"lon: {ds.variables['lon'].shape}:{ds.variables['lon'][0:this_many]}")
-    # print(F"z: {ds.variables['z'].shape}:{ds.variables['z'][0:this_many]}")
-    # print(F"beached: {ds.variables['beached'].shape}:{ds.variables['beached'][0:this_many]}")
-    # print(F"beached_count: {ds.variables['beached_count'].shape}:{ds.variables['beached_count'][0:this_many]}")
+    # print(F"lon: {ds.variables['lon'].shape}:{ds.variables['lon'][0:this_many]}") # print(F"z: {ds.variables['z'].shape}:{ds.variables['z'][0:this_many]}") # print(F"beached: {ds.variables['beached'].shape}:{ds.variables['beached'][0:this_many]}") # print(F"beached_count: {ds.variables['beached_count'].shape}:{ds.variables['beached_count'][0:this_many]}")
 
     tot_times = ds.variables['trajectory'].shape[1]
+    start_date = dateFromCF(ds.variables['time'].units)
     for c_time_step in np.arange(0,tot_times,dt):
-        print(F"------------------ {c_time_step} ----------------------")
-        fig = plt.figure(figsize=(20,10))
+        # print(F"proc_id: {procid} (c_time_step % TOT_PROC)=({c_time_step} % {TOT_PROC}) = {(c_time_step % TOT_PROC)}")
+        if (c_time_step % TOT_PROC) == procid:
+            print(F"------------------ procid: {procid} --> timestep {c_time_step} ----------------------")
+            fig = plt.figure(figsize=(20,10))
+            c_date = start_date + timedelta(days=int(c_time_step))
 
-        lats = ds.variables['lat'][:,c_time_step]
-        lons = ds.variables['lon'][:,c_time_step]
-        trajectory = ds.variables['trajectory'][:,c_time_step]
+            lats = ds.variables['lat'][:,c_time_step]
+            lons = ds.variables['lon'][:,c_time_step]
+            trajectory = ds.variables['trajectory'][:,c_time_step]
 
-        title = F'Current time step: {c_time_step}'
-        if usebeached:
-            beached = ds.variables['beached'][:,c_time_step]
-            beached_count = ds.variables['beached_count'][:,c_time_step]
-            id0 = beached == 0
-            id1 = beached == 1
-            id2 = beached == 2
+            # title = F'{file_name} \n Current time step: {c_time_step}'
+            title = F"{start_date.strftime('%Y-%m-%d')} - {c_date.strftime('%Y-%m-%d')}"
+            if usebeached:
+                beached = ds.variables['beached'][:,c_time_step]
+                beached_count = ds.variables['beached_count'][:,c_time_step]
+                id0 = beached == 0
+                id1 = beached == 1
+                id2 = beached == 2
 
-            if c_time_step == 0:
-                id3 = beached == 3
-                id4 = beached == 4
+                if c_time_step == 0:
+                    id3 = beached == 3
+                    id4 = beached == 4
+                else:
+                    id3 = np.logical_or(id3, beached == 3)
+                    id4 = np.logical_or(id4, beached == 4)
+                    id4 = np.logical_or(id4, beached.mask)
+
+                print(beached[id4])
+                print(beached_count[id4])
+                print(trajectory[id4])
+
+                # plotScatter(lats[id0], lons[id0], 'b', title)
+                # plotScatter(lats[id1], lons[id1], 'r', title)
+                # plotScatter(lats[id2], lons[id2], 'g', title) # plotScatter(lats[id3], lons[id3], 'm', title)
+                plotScatter(lats[id4], lons[id4], 'y', title)
             else:
-                id3 = np.logical_or(id3, beached == 3)
-                id4 = np.logical_or(id4, beached == 4)
-                id4 = np.logical_or(id4, beached.mask)
+                plotScatter(lats, lons, 'y', title)
 
-            print(beached[id4])
-            print(beached_count[id4])
-            print(trajectory[id4])
-
-            # plotScatter(lats[id0], lons[id0], 'b', title)
-            # plotScatter(lats[id1], lons[id1], 'r', title)
-            # plotScatter(lats[id2], lons[id2], 'g', title)
-            # plotScatter(lats[id3], lons[id3], 'm', title)
-            plotScatter(lats[id4], lons[id4], 'y', title)
-        else:
-            plotScatter(lats, lons, 'y', title)
-
-        # plt.show()
-        plt.savefig(F"/data/UN_Litter_data/output/OutputImages/{c_time_step:04d}.png")
-        plt.close()
-
+            # plt.show()
+            plt.savefig(F"{output_folder}/{c_time_step:04d}.png")
+            plt.close()
 
 def plotScatter(lats, lons, color='b',title=''):
     ax = plt.subplot(1, 1, 1, projection=ccrs.PlateCarree())
     ax.scatter(lons, lats, color=color, s=1)
     ax.coastlines()
+    ax.set_global()
     ax.set_title(title, fontsize=30)
     # plt.savefig(file_name.replace('json','png'), bbox_inches='tight')
 
@@ -117,19 +179,35 @@ if __name__ == "__main__":
 
     # This will plot the output netcdf from ocean parcels
     # plotTrajectoriesFile(file_name)
-    # file_name = "/data/UN_Litter_data/output/JUN22_2010-01-01_2010-01-31__00_JUN22JUN22Test_Unbeaching.nc"
-    # file_name = "/data/UN_Litter_data/output/JUN22_2010-01-31_2010-03-02__01_JUN22JUN22Test_Unbeaching.nc"
-    # file_name = "/data/UN_Litter_data/output/JUN22_2010-03-02_2010-04-01__02_JUN22JUN22Test_Unbeaching.nc"
-    # file_name = "/data/UN_Litter_data/output/FiveYearComparison/NoWinds_YesDiffusion_2010_01.nc"
-    # file_name = "/data/UN_Litter_data/output/BK/Single_Release_FiveYears_2010_01_NoWinds_WithDiff_2010-12-27_2011-01-26__01.nc"
-    # file_name = "/data/UN_Litter_data/output/Continue_YesWinds_YesDiffusion_NoUnbeaching_2015_01_2015-01-01_2015-01-31.nc"
-    # file_name = "/data/UN_Litter_data/output/Continue_YesWinds_YesDiffusion_NoUnbeaching_2015_01_2015-01-31_2015-03-02.nc"
-    # file_name = "/data/UN_Litter_data/output/Continue_YesWinds_YesDiffusion_NoUnbeaching_2015_01_2015-03-02_2015-04-01.nc"
-    file_name = "/data/UN_Litter_data/output/TenYears_YesWinds_YesDiffusion_NoUnbeaching_2010_01.nc"
-    plotDataOZ(file_name, usebeached=False, dt=10)
+
+    input_data_folder = "/data/COAPS_Net/work/ozavala/WorldLitterOutput/YesWinds_YesDiffusion_NoUnbeaching/"
+    output_folder =  "/data/UN_Litter_data/output/OutputImagesAcc"
+    # Here I'm plotting all the accumulated files for 10 years (it will never end)
+    # plotOceanParcelsAccumulatedResults(input_data_folder, 2010, 2020, dt=1)
+
+    # Here I'm plotting separated files
+    input_data_folder = "/data/UN_Litter_data/output/YesWinds_YesDiffusion_NoUnbeaching"
+    output_folder = "/data/UN_Litter_data/output/OutputImages"
+    TOT_PROC = 10
+    p = Pool(TOT_PROC)
+    # for year in range(2010, 2011):
+    for year in range(2010, 2011):
+        try:
+            # for month in range(1, 13):
+            for month in range(1, 2):
+                print(F"===================== MONTH {month} ====================")
+                file_name = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_{year}_{month:02d}.nc"
+                output_folder = join("/data/UN_Litter_data/output/OutputImages", F"{year}_{month:02d}")
+                print(file_name)
+                p.starmap(plotOceanParcelOutputParallel, [[TOT_PROC, procid, input_data_folder, output_folder, file_name, False, 1] for procid in range(TOT_PROC)])
+        except Exception as e:
+            print(F"Failed for {year}: {e}")
 
     # This plots directly the json file
     # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"
     # json_file = F"/var/www/html/data/6/Single_Release_FiveYears_EachMonth_2010_01_04.json"
     # json_file = F"/var/www/html/data/6/JUN22JUN22Test_Unbeaching_00.json"
     # plotJsonFile(json_file)
+
+##
+

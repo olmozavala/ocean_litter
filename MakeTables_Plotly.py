@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 
 MAX_ROWS = 15
 config = get_op_config()
-input_file = join(config[WorldLitter.output_folder_web],'ReachedTablesData.json')
+input_file = join(config[WorldLitter.output_folder_web], 'ReachedTablesData.json')
 print(input_file)
 with open(input_file) as f:
     data = json.load(f)
@@ -72,7 +72,7 @@ def dashPlotTable(country_name,  to_data, from_data, title):
                                             )),
                       )
     fig.write_image(F"/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/{country_name.replace(' ','_')}.png",
-                    scale=2)
+                    scale=2, engine="kaleido")
 
 
 def makeTables(data):

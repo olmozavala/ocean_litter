@@ -16,35 +16,12 @@ from config.MainConfig import get_op_config
 from config.params import WorldLitter
 import matplotlib.pyplot as plt
 
-def createBinFiles():
-
-    parts = 2
-    times = 5
-
-    info = F" a chis a chis a chis; {parts}, {times}"
-    particles = (np.random.random((2,parts,times))*10000).astype(np.int16)
-    print(F"Input \n\t txt: {info}  \n\t data: {particles}")
-
-    file_name = 'test.bin'
-    # -------- Writing to file ---------------
-    f = open(file_name,'wb')
-    text = struct.pack(F"{len(info)}s", bytes(info, 'utf-8'))
-    f.write(text)
-    f.write(particles.tobytes())
-    f.close()
-
-    # -------- Writing to file ---------------
-    f = open(file_name,'rb')
-    data = f.read(len(info))
-    outputtxt = struct.unpack(F"{len(info)}s", data)
-    data = f.read(parts*times*2*2)
-    outputdata = struct.unpack(F"{parts*times*2}h", data)
-    f.close()
-    print(F"Output \n\t txt: {outputtxt[0]}  \n\t data: {outputdata}")
-
 def createFiles():
-    compression = zipfile.ZIP_DEFLATED
-    all_reduce_particles_by = [1, 4, 6]
+    """
+    Creates binary and text files corresponding to the desired 'reduced' number of particles
+    :return:
+    """
+    all_reduce_particles_by = [4, 6]
     min_number_particles = 20
     BEACHED = False  # Indicate if we are testing the beached particles
 
@@ -55,9 +32,9 @@ def createFiles():
     config = get_op_config()
 
     # ------- Home ---------
-    output_folder = config[WorldLitter.output_folder_web]
     input_folder = config[WorldLitter.output_folder]
     input_file = config[WorldLitter.output_file]
+    output_folder = config[WorldLitter.output_folder_web]
 
     countries_file_name = config[WorldLitter.countries_file]
     # Reading the json file with the names and geometries of the countries
@@ -78,14 +55,11 @@ def createFiles():
 
     glob_num_particles = nc_file.dimensions['traj'].size
 
-    traj = all_vars['trajectory']
-    time = all_vars['time']
     lat = all_vars['lat']
     lon = all_vars['lon']
-    Z = all_vars['z']
     if BEACHED:
         beached = all_vars['beached']
-        beached_count = all_vars['beached_count']
+        # beached_count = all_vars['beached_count']
 
     # Iterate over the options to reduce the number of particles
     for reduce_particles_global in all_reduce_particles_by:
@@ -154,7 +128,7 @@ def createFiles():
         f.write(bindata)
         f.close()
 
-        # -------- Writing zip file---------------
+        # -------- Writing zip file (required because the website reads zip files) ---------------
         print(" Saving zip file .....")
         with zipfile.ZipFile(zip_output_file, 'w') as zip_file:
             zip_file.write(binary_file)

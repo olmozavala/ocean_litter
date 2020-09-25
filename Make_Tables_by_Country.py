@@ -13,6 +13,7 @@ from config.MainConfig import get_preproc_config
 from config.params import WorldLitter, Preproc
 import shapely.speedups
 import matplotlib.pyplot as plt
+import collections
 
 # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
 def get_reached(data, col_name, col_particle):
@@ -107,24 +108,66 @@ def readfrom(f, json_names, json_ids):
         print(F"Not found: {table_country_name}")
         return -1, table_country_name
 
+
+def jsonToCSV(json_object, file_name):
+    print("Converting JSON to CSV")
+    new_country = "Country Name, Tons Exported, End in the Ocean, End in the beach, \n"
+    json_object = collections.OrderedDict(sorted(json_object.items()))
+    csv_file = ""
+    for country_name in json_object:
+        country = json_object[country_name]
+
+        try:
+            country_txt = "\n" + new_country
+            country_txt += F"{country_name}"
+            # Adding the from countries
+            from_data = []
+            to_data = []
+            if 'from' in country:
+                country_txt += F", {country['from']['tot_tons']}, {country['from']['ocean_tons']}, {country['from']['beach_tons']} \n"
+                if 'from' in country['from']:
+                    for from_country in country['from']['from']:
+                        from_data.append(F"Tons to {from_country['name']}, {from_country['tons']},")
+
+            if 'to' in country:
+                # Adding the to countries
+                for to_country in country['to']['to']:
+                    to_data.append(F"From {to_country['name']}, {to_country['tons']},")
+
+            rows = max(len(from_data), len(to_data))
+            for i in range(rows):
+                c_row = ",,,,"
+                if i < len(from_data):
+                    c_row += from_data[i]
+                else:
+                    c_row += ",,"
+
+                if i < len(to_data):
+                    c_row += to_data[i]
+
+                country_txt += c_row + "\n"
+
+            csv_file += country_txt
+
+        except Exception as e:
+            print(F"Failed for {country_name}: {e}")
+
+    f = open(file_name, 'w')
+    f.write(csv_file)
+
+    print("Done!")
+
+
 if __name__ == "__main__":
-    # config = get_preproc_config()
-    #
-    # input_folder = config[Preproc.shapes_folder]
-    # output_file = config[WorldLitter.countries_file]
-    # file_countries = 'ne_50m_admin_0_countries.shp'
-    # release_loc_folder = config[WorldLitter.loc_folder]
-    # lat_files = config[WorldLitter.lat_files]
-    # lon_files = config[WorldLitter.lon_files]
-    # geo_countries = gpd.GeoDataFrame.from_file(input_folder+file_countries)
-    # print(geo_countries['ADMIN'])
+    # TODO First copy all the tables from to data/reached_data_tables inside the project
+    # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
     config = get_op_config()
 
-    input_folder = config[WorldLitter.stats_folder]
-    output_folder = config[WorldLitter.output_folder_web]
-    all_files = os.listdir(input_folder)
+    stats_folder = config[WorldLitter.stats_folder]
+    output_web_folder = config[WorldLitter.output_folder_web]
+    all_files = os.listdir(stats_folder)
     shapely.speedups.enable()
-    json_countries_file = join(output_folder,'countries.json')
+    json_countries_file = join(output_web_folder,'countries.json')
 
     not_found = []
     with open(json_countries_file) as f:
@@ -143,7 +186,7 @@ if __name__ == "__main__":
             if cur_file.find("swp") == -1:
                 if cur_file.find("_from_") != -1:
                     print(F"------ Reading file: {cur_file} --------")
-                    f = open(join(input_folder, cur_file), "r")
+                    f = open(join(stats_folder, cur_file), "r")
                     obj_from, country_name = readfrom(f, all_json_names, all_ids)
                     if obj_from == -1: # not found
                         if not(country_name in not_found):
@@ -158,7 +201,7 @@ if __name__ == "__main__":
 
                 if cur_file.find("_to_") != -1:
                     print(F"------ Reading file: {cur_file} --------")
-                    f = open(join(input_folder, cur_file), "r")
+                    f = open(join(stats_folder, cur_file), "r")
                     obj_from, country_name = readto(f, all_json_names, all_ids)
                     if obj_from == -1: # not found
                         if not(country_name in not_found):
@@ -169,7 +212,9 @@ if __name__ == "__main__":
                     json_object[country_name]['to'] = obj_from
 
         json_txt = json.dumps(json_object)
-        output_file = join(output_folder,'ReachedTablesData.json')
+        output_file = join(output_web_folder, 'ReachedTablesData.json')
+        output_file_csv = join(output_web_folder, 'ReachedTablesData.csv')
+        jsonToCSV(json_object, output_file_csv)
         f = open(output_file, "w+")
         f.write(json_txt)
 
