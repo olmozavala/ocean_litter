@@ -36,18 +36,21 @@ def make_plot(LONS, LATS, data, title, file_name):
     plt.close()
 
 
-def make_hist(only_acc):
-    config = get_op_config()
-
-    input_folder = config[WorldLitter.output_folder]
-    input_file = config[WorldLitter.output_file]
-    file_name = join(input_folder, input_file)
-
+def make_hist(config, input_file):
+    """
+    It computes the histogram of a single file in parallel, using tot processors
+    :return:
+    """
+    # Parameters. How many processors and what resolution to create the histogram
+    tot_proc = 10
     resolution = 1/10  # In degrees
     resolution_txt = "one_tenth"  # In degrees
-    # resolution = 1/4  # In degrees
-    # resolution_txt = "one_quarter"  # In degrees
 
+    # Reads input folders
+    input_folder = config[WorldLitter.output_folder]
+    file_name = join(input_folder, input_file)
+
+    # Creates output folders and file names
     output_histogram_folder = join(input_folder, "histo")
     output_imgs_folder = join(input_folder, "images")
     output_tiff_folder = join(input_folder, "tiffs")
@@ -62,11 +65,14 @@ def make_hist(only_acc):
     output_file = join(output_histogram_folder, F"{input_file.replace('.nc','')}_histogram_{resolution_txt}")
     output_file_tiff = join(output_tiff_folder, F"{input_file.replace('.nc','')}_histogram_{resolution_txt}.tiff")
 
+    # Creates the output data frame and creates the output grid
+    print(F"Working with file: {file_name}")
     ds = Dataset(file_name, "r", format="NETCDF4")
 
     tot_lats = int(180/resolution)
     tot_lons = int(360/resolution)
 
+    # lats and lons contain ALL the positions from the files
     lats = ds['lat'][:]
     lons = ds['lon'][:]
     tot_particles = len(lats)
@@ -74,8 +80,7 @@ def make_hist(only_acc):
     LATS = np.linspace(-90, 90, tot_lats+1)
     LONS = np.linspace(-180, 180, tot_lons+1)
 
-    # Computing accumulated histogram
-    tot_proc = 10
+    # Computes the histogram in parallel
     with Pool(tot_proc) as pool:
         acum_histo_par = pool.starmap(parallelSum, [(lats, lons, LATS, LONS, i, tot_proc) for i in range(tot_proc)])
 
@@ -87,7 +92,7 @@ def make_hist(only_acc):
     idx = acum_histo == 1
     acum_histo[idx] = np.nan
     # Avoid zeros
-    idx = acum_histo == 0
+    idx = acum_histo <= 0
     acum_histo[idx] = 1
     # Saving accumulated histogram as netcdf
     print("Saving files....")
@@ -102,7 +107,18 @@ def make_hist(only_acc):
 
 
 def parallelSum(lats, lons, LATS, LONS, id_proc, tot_proc):
+    """
+    Depending on the assigned id proc it will sum its corresponding lats and lons into the grid
+    :param lats:
+    :param lons:
+    :param LATS:
+    :param LONS:
+    :param id_proc:
+    :param tot_proc:
+    :return:
+    """
 
+    # makes the grid and flattens the arrays
     histo = np.zeros((len(LATS), len(LONS)))
     c_lats = lats.flatten()
     c_lons = lons.flatten()
@@ -113,11 +129,13 @@ def parallelSum(lats, lons, LATS, LONS, id_proc, tot_proc):
     id_above = c_lons >= 180
     c_lons[id_below] = c_lons[id_below] + 360
     c_lons[id_above] = c_lons[id_above] - 360
-    # Iterate over all particles
+
     segment_size = int(np.ceil(tot_particles/tot_proc))
     seg_from = int(segment_size*id_proc)
     seg_to = int(np.min((segment_size*(id_proc+1), tot_particles)))
     print(F"Id: {id_proc}, tot_proc: {tot_proc}, tot particles: {tot_particles} from: {seg_from} to: {seg_to}")
+
+    # Iterate over all particles. It searches the index in the GRID for each particle and adds it into the position
     for c_part in np.arange(seg_from, seg_to):
         i = np.argmax(c_lats[c_part] <= LATS) - 1
         j = np.argmax(c_lons[c_part] <= LONS) - 1
@@ -131,6 +149,7 @@ def parallelSum(lats, lons, LATS, LONS, id_proc, tot_proc):
 
 
 def addAttributes(ds, var_name):
+    """Adds default attributes the the netcdf to make it CF-Compliant"""
     ds.attrs['Conventions'] = "CF-1.0"
     ds['lat'].attrs['standard_name'] = "latitude"
     ds['lat'].attrs['long_name'] = "latitude"
@@ -146,5 +165,45 @@ def addAttributes(ds, var_name):
 
 
 if __name__ == "__main__":
-    make_hist(only_acc=True)
+    # By default the outputs should be on your 'data/output' folder
+    config = get_op_config()
+
+    # =========================== Makes histogram =====================
+    # This part is to generate (in a loop) CF-netcdf files of the accumulated locations.
+    for i in range(5,13):
+        # I modify it so that it takes the names from heere NOT from the config file
+        file_name = F"YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
+        # make_hist(config, file_name)
+
+    # =========================== Merges histograms =====================
+    # Here we can merge those files into a single one
+    total_days = (365 * 12) - (11 * (6 * 30))# How many time steps were evaluated in TOTAL by all the model
+    all_files = []
+
+    resolution = 1/10  # In degrees
+    tot_lats = int(180/resolution)
+    tot_lons = int(360/resolution)
+
+    first_file = True
+    input_folder = "/data/UN_Litter_data/output/histo"
+    for i in range(1,13):
+        input_file = F"YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}_histogram_one_tenth.nc"
+        file_name = join(input_folder, input_file)
+        ds = Dataset(file_name, "r", format="NETCDF4")
+
+        if first_file:
+            lat = ds['lat'][:]
+            lon = ds['lon'][:]
+            c_histo = ds['histo'][:]
+            first_file = False
+        else:
+            c_histo += ds['histo'][:]
+
+    f_histo = c_histo/total_days
+    print(F"Saving merged file.... min value: {np.amin(f_histo)} max value: {np.amax(f_histo)}")
+    ds = xr.Dataset({"histo": (("lat", "lon"), f_histo)}, {"lat": lat, "lon": lon})
+    ds = addAttributes(ds, 'histo')
+    ds.to_netcdf(join(input_folder,F"Merged.nc"))
+    ds.close()
+
 
