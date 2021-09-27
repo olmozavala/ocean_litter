@@ -27,13 +27,14 @@ def get_op_config():
         WorldLitter.years: np.arange(2010, 2015),
         # WorldLitter.base_folder: "/data/COAPS_nexsan/people/xbxu/hycom/GLBv0.08/",
         WorldLitter.base_folder: join(data_folder,"HYCOM"),
-        WorldLitter.loc_folder: "data/release_locations_reduced",
+        WorldLitter.loc_folder: "/data/UN_Litter_data/HYCOM/data/release_locations",
         WorldLitter.unbeach_file: join(data_folder,"HYCOM/unbeaching100000ms.nc"),
         # WorldLitter.output_folder: join(data_folder,"output"),
         WorldLitter.output_folder: join(data_folder,"output","YesWinds_YesDiffusion_NoUnbeaching"),
         WorldLitter.output_file: F"{today_str}.nc",
         # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
-        WorldLitter.stats_folder: "data/reached_data_tables",
+        # WorldLitter.stats_folder: "data/reached_data_tables",
+        WorldLitter.stats_folder: "data/reached_data_tables/decay_jan_2021",
         WorldLitter.lat_files: ["coasts_all_y.csv", "rivers_all_y.csv"],
         WorldLitter.lon_files: ["coasts_all_x.csv", "rivers_all_x.csv"],
         # lat_files = ["river_cat_1_x.csv"]

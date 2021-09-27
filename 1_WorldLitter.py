@@ -84,8 +84,9 @@ if __name__ == "__main__":
                 print(F"Running from restart ({execution_days})!!!!!  {restart_file} ")
                 runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name, restart_file=restart_file)
             else:
-                print("Running with restart, first run without restart!!!!!")
+                print("Running with restart. This is the first time step (without restart)!!!!!")
                 runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name)
         else:
             # Running without restart file
+            print("Running without restart!!!!!")
             sequential(start_date, end_date, config, name, winds=winds, unbeaching=unbeaching, diffusion=diffusion)

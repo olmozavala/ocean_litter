@@ -10,9 +10,15 @@ import plotly.graph_objects as go
 MAX_ROWS = 15
 config = get_op_config()
 input_file = join(config[WorldLitter.output_folder_web], 'ReachedTablesData.json')
-print(input_file)
+print(F"Reading data from: {input_file}")
+skip_countries = ["taiwan"]
 with open(input_file) as f:
     data = json.load(f)
+
+def main():
+    output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/"
+    makeTables(data, output_folder)
+
 
 def addRows(data, data_type):
     add_others = False
@@ -22,25 +28,40 @@ def addRows(data, data_type):
     dir_text = "to" if data_type == "from" else "from"
     for i in range(0, len(data[data_type])):
         c_row = data[data_type][i]
+        if c_row['name'].lower() in skip_countries:
+            continue
+
         if i > MAX_ROWS:
             others_val += int(c_row['tons'])
             others_perc += c_row['perc']
             add_others = True
         else:
+            perc_txt = F"{c_row['perc']:0.1f}" if c_row['perc'] >= 0.1 else "less than 0.1"
             if c_row['tons'] > 1:
-                rows.append(F"{int(c_row['tons'])} tons {dir_text} {c_row['name']} ({c_row['perc']:0.1f}%) ")
+                rows.append(F"{formatNumbers(int(c_row['tons']))} {dir_text} {c_row['name']} ({perc_txt}%) ")
             else:
-                rows.append(F"Less than 1 ton {dir_text} {c_row['name']} ({c_row['perc']:0.1f}%) ")
+                if c_row['tons'] == 1:
+                    rows.append(F"1 {dir_text} {c_row['name']} ({perc_txt}%) ")
+                else:
+                    rows.append(F"Less than 1 {dir_text} {c_row['name']} ({perc_txt}%) ")
 
     if add_others:
-        if int(c_row['tons']) > 1:
-            rows.append(F"{others_val} tons {dir_text} other countries ({others_perc:0.1f}%) ")
+        if int(others_val) > 1:
+            rows.append(F"{formatNumbers(others_val)} tons {dir_text} other countries ({others_perc:0.1f}%) ")
         else:
-            rows.append(F"Less than 1 ton {dir_text} other countries ({others_perc:0.1f}%) ")
+            if others_val == 1:
+                rows.append(F"1 {dir_text} other countries ({others_perc:0.1f}%) ")
+            else:
+                rows.append(F"Less than 1 {dir_text} other countries ({others_perc:0.1f}%) ")
 
     return rows
 
-def dashPlotTable(country_name,  to_data, from_data, title):
+
+def formatNumbers(number):
+    return "{:,}".format(number)
+
+
+def dashPlotTable(country_name,  to_data, from_data, title, output_folder):
 
     headerColor = '#E6E6E6'
     rowEvenColor = '#F8F8F8'
@@ -49,8 +70,8 @@ def dashPlotTable(country_name,  to_data, from_data, title):
     rows_from = addRows(from_data, 'from')
     rows_to = addRows(to_data, 'to')
 
-    fig = go.Figure(data=[go.Table(header=dict(values=[F"Waste from {country_name.capitalize()} ({from_data['tot_tons']} tons)",
-                                                       F"Waste towards {country_name.capitalize()} ({to_data['tot_tons']} tons)"],
+    fig = go.Figure(data=[go.Table(header=dict(values=[F"Waste from {country_name.capitalize()} ({formatNumbers(from_data['tot_tons'])} tons)",
+                                                       F"Waste towards {country_name.capitalize()} ({formatNumbers(to_data['tot_tons'])} tons)"],
                                                fill_color=headerColor,
                                                line_color='gray',
                                                height=25),
@@ -71,27 +92,31 @@ def dashPlotTable(country_name,  to_data, from_data, title):
                                                 size=16
                                             )),
                       )
-    fig.write_image(F"/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/{country_name.replace(' ','_')}.png",
-                    scale=2, engine="kaleido")
+    fig.write_image(join(output_folder,F"{country_name.replace(' ','_')}.png"), scale=2, engine="kaleido")
 
 
-def makeTables(data):
+def makeTables(data, output_folder):
     tables = []
     for i, country_name in enumerate(np.array(sorted(data.keys()))):
+        # We have the option to remove some countries
+        if country_name in skip_countries:
+            continue
+
         try:
             to_data = data[country_name]['to']
             from_data = data[country_name]['from']
-            title = F"""{country_name.capitalize()} exports {from_data['tot_tons']} tons per year <br>
-{int(from_data['ocean_tons'])} ({from_data['ocean_perc']}%) end up on the ocean  <br>
-{int(from_data['beach_tons'])} ({from_data['beach_perc']}%) end up on the beach <br>
+            title = F"""{country_name.capitalize()} exports approximately {formatNumbers(from_data['tot_tons'])} tons in ten years <br>
+{formatNumbers(int(from_data['ocean_tons']))} ({from_data['ocean_perc']}%) end up in the ocean  <br>
+{formatNumbers(int(from_data['beach_tons']))} ({from_data['beach_perc']}%) end up in the beach <br>
 """
-            dashPlotTable(country_name, to_data, from_data, title),
+            dashPlotTable(country_name, to_data, from_data, title, output_folder),
         except Exception as e:
-            print(F"Failed for country: {country_name}: {traceback.print_exc()}")
+            # print(F"Failed for country: {country_name}:{i}: {traceback.print_exc()}")
+            print(F"Failed for country: {country_name} Index:{i}")
     return tables
 
 if __name__ == '__main__':
-    tables = makeTables(data)
+    main()
 
 ##
 

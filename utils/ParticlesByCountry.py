@@ -1,4 +1,26 @@
 import pandas as pd
+from os.path import join
+import shapely.speedups
+from shapely.geometry import Polygon, Point, MultiPoint
+import numpy as np
+import functools
+import geopandas as gpd
+from config.MainConfig import get_preproc_config
+from config.params import WorldLitter, Preproc
+config = get_preproc_config()
+
+def indexForCountries(countries):
+    """
+    This function returns all the indexes of the locations for the desired countries.
+    The locations files are read from the MainConfig get_preproc_config function
+    :param countries:
+    :return:
+    """
+    config = get_preproc_config()
+    countries_file_name = config[WorldLitter.countries_file]
+    df_country_list = pd.read_csv(countries_file_name, index_col=0)
+    return df_country_list.loc[countries]
+
 
 def case1():
     country_list_asia = ('Bahrain', 1, 4,  # Not shown
@@ -62,5 +84,9 @@ def case1():
                            'togo', 4668, 35,
                            'tunisia', 4703, 234)
     return country_list_asia, country_list_africa
+
+if __name__ == "__main__":
+    indexForCountries(["Cambodia","China","Indonesia", "South Korea",
+                       "Malaysia", "Philippines", "Thailand", "Vietnam"])
 
 

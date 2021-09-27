@@ -21,7 +21,7 @@ def createBinaryFileSingle():
     Creates binary and text files corresponding to the desired 'reduced' number of particles
     :return:
     """
-    all_reduce_particles_by = [4, 6]
+    all_reduce_particles_by = [2, 3, 4, 6]
     min_number_particles = 20
     BEACHED = False  # Indicate if we are testing the beached particles
 
@@ -115,7 +115,7 @@ def createBinaryFileSingle():
             bindata += (np.array(countries[c_country]['lat_lon'][0])*100).astype(np.int16).tobytes()
             bindata += (np.array(countries[c_country]['lat_lon'][1])*100).astype(np.int16).tobytes()
 
-        print(" Saving binary file .....")
+        print(F" Saving binary file {final_ouput_folder}.....")
         header_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}.txt"
         binary_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}.bin"
         zip_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}.zip"
@@ -129,7 +129,7 @@ def createBinaryFileSingle():
         f.close()
 
         # -------- Writing zip file (required because the website reads zip files) ---------------
-        print(" Saving zip file .....")
+        print(F" Saving zip file ..... {zip_output_file}")
         with zipfile.ZipFile(zip_output_file, 'w') as zip_file:
             zip_file.write(binary_file)
         zip_file.close()
@@ -137,12 +137,12 @@ def createBinaryFileSingle():
 
     nc_file.close()
 
-def createBinaryFileMultiple():
+def createBinaryFileMultiple(input_file):
     """
     Creates binary and text files corresponding to the desired 'reduced' number of particles
     :return:
     """
-    all_reduce_particles_by = [4, 6]
+    all_reduce_particles_by = [3]
     min_number_particles = 20
     particlesEveryThisTimeSteps = 200  # How many timesteps save in each file
     BEACHED = False  # Indicate if we are testing the beached particles
@@ -155,7 +155,6 @@ def createBinaryFileMultiple():
 
     # ------- Home ---------
     input_folder = config[WorldLitter.output_folder]
-    input_file = config[WorldLitter.output_file]
     output_folder = config[WorldLitter.output_folder_web]
 
     countries_file_name = config[WorldLitter.countries_file]
@@ -195,7 +194,8 @@ def createBinaryFileMultiple():
         cur_idx = 0
 
         tot_assigned_particles = 0
-        for ichunk, cur_chunk in enumerate(np.arange(0,tot_time_steps, particlesEveryThisTimeSteps)):
+        # Iterate over the number of partitioned files (how many files are we going to create)
+        for ichunk, cur_chunk in enumerate(np.arange(0, tot_time_steps, particlesEveryThisTimeSteps)):
             countries = {}
             # Iterate over each country
             for cur_country_name in df_country_list.index:
@@ -207,7 +207,7 @@ def createBinaryFileMultiple():
                 tot_particles = len(particles_for_country)
                 tot_assigned_particles += tot_particles
                 reduce_particles_by_country = reduce_particles_global
-                # If there are not enough particles then we need to reduce the 'separation' of particles
+                # If there are not enough particles then we need to reduce the 'separation/elimination' of particles
                 while (((tot_particles / reduce_particles_by_country) < min_number_particles) and (
                         reduce_particles_by_country > 1)):
                     reduce_particles_by_country -= 1
@@ -241,7 +241,7 @@ def createBinaryFileMultiple():
                 bindata += (np.array(countries[c_country]['lat_lon'][0])*100).astype(np.int16).tobytes()
                 bindata += (np.array(countries[c_country]['lat_lon'][1])*100).astype(np.int16).tobytes()
 
-            print(" Saving binary file .....")
+            print(F" Saving binary file {final_ouput_folder}.....")
             header_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}_{ichunk:02d}.txt"
             binary_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}_{ichunk:02d}.bin"
             zip_output_file = F"{final_ouput_folder}/{input_file.replace('.nc','')}_{ichunk:02d}.zip"
@@ -255,7 +255,7 @@ def createBinaryFileMultiple():
             f.close()
 
             # -------- Writing zip file (required because the website reads zip files) ---------------
-            print(" Saving zip file .....")
+            print(F" Saving zip file {zip_output_file}.....")
             with zipfile.ZipFile(zip_output_file, 'w') as zip_file:
                 zip_file.write(binary_file)
             zip_file.close()
@@ -263,12 +263,14 @@ def createBinaryFileMultiple():
 
     nc_file.close()
 
-def testReadingFile():
+def testBinaryAndHeaderFiles():
 
     #-------- Reading file ---------
     # -------- This part is just to test the reading of a specific binary file
-    header_file = "/var/www/html/data/4/YesWinds_YesDiffusion_NoUnbeaching_2010_01.txt"
-    data_file = "/var/www/html/data/4/YesWinds_YesDiffusion_NoUnbeaching_2010_01.bin"
+    # header_file = "/var/www/html/data/4/YesWinds_YesDiffusion_NoUnbeaching_2010_01.txt"
+    # data_file = "/var/www/html/data/4/YesWinds_YesDiffusion_NoUnbeaching_2010_01.bin"
+    header_file = "/home/olmozavala/Desktop/DELETE/YesWinds_YesDiffusion_NoUnbeaching_2010_01_01.txt"
+    data_file = "/home/olmozavala/Desktop/DELETE/YesWinds_YesDiffusion_NoUnbeaching_2010_01_01.bin"
     f_header = open(header_file,'r')
     header_lines = f_header.readlines()
 
@@ -286,15 +288,18 @@ def testReadingFile():
         lons_int = struct.unpack(F"{num_particles*time_steps}h", lons_bin)
         lats = np.array([lats_int])[0]/100
         lons = np.array([lons_int])[0]/100
-        print(lats[0:3])
-        print(lons[0:3])
-        break
+        # print(lats[0:3])
+        # print(lons[0:3])
 
     f_data.close()
     f_header.close()
 
+
 if __name__ == "__main__":
     # createBinaryFileSingle()
-    createBinaryFileMultiple()
-    # testReadingFile()
+    testBinaryAndHeaderFiles()
 
+    # for i in range(1,13):
+    #     input_file = F"YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
+    #     #input_file = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
+    #     createBinaryFileMultiple(input_file)

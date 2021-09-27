@@ -16,14 +16,17 @@ from dateutil.relativedelta import relativedelta
 from config.MainConfig import get_op_config
 from config.params import WorldLitter
 from multiprocessing import Pool
-
-# -------------- Plot with OP ---------------
+import geopandas
+import matplotlib.pyplot as plt
+import geoplot.crs as gcrs
+import geoplot as gplt
+import time
+import mapclassify
 
 def dateFromCF(str_date):
     sp = str_date.split(' ')
     # For the moment it assumes it is in days 'days since 2010-01-01 00:00:00'
     return datetime.strptime(sp[2],'%Y-%m-%d')
-
 
 def plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, start_year, end_year, dt=1):
     """
@@ -34,7 +37,6 @@ def plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, start_y
     :param dt:
     :return:
     """
-
     # Only for
     tot_days = (end_year-start_year)*365
     start_date = datetime.strptime(str(start_year),'%Y')
@@ -164,8 +166,57 @@ def plotJsonFile(file_name):
             plt.show()
             plt.close()
 
+def getCountriesStats(maincountry, search_type="from"):
+    countries = []
+    tons = []
+    percs = []
+    try:
+        if search_type == "from":
+            for country in maincountry['from']['from']:
+                countries.append(country['name'])
+                tons.append(country['tons'])
+                percs.append(country['perc'])
+    except Exception as e:
+        print(F"Failed for country: {stat}")
+    return [c.lower() for c in countries], tons, percs
+
 if __name__ == "__main__":
     config = get_op_config()
+
+    # Read geojson
+    web_folder = config[WorldLitter.output_folder_web]
+    geojson_file = join(web_folder, "countries.json")
+    stats_file = join(web_folder, "ReachedTablesData.json")
+    geo_data = geopandas.read_file(geojson_file)
+
+    ##
+    with open(stats_file) as f:
+        stats = json.load(f)
+        # Iterate over each country
+        for country, stat in stats.items():
+            geo_country = geo_data[geo_data["name"].str.lower() == country] # Finds the corresponding geo data
+            # Obtain all the countries that receive litter from it
+            countries, tons, percs = getCountriesStats(stat)
+            geo_from_countries = geo_data[geo_data["name"].str.lower().isin(countries)] # Finds the corresponding geo data
+            # gplt.polyplot(geo_country, figsize=(8, 4))
+            # gplt.polyplot(geo_from_countries, figsize=(8, 4))
+            # Note: this code sample requires gplt>=0.4.0.
+            if len(tons) > 0 and len(geo_from_countries) == len(tons):
+                scheme = mapclassify.Quantiles(tons, k=min(5,len(tons)))
+                ax = gplt.polyplot(geo_data, figsize=(8, 4))
+                # ax = gplt.webmap(geo_data, projection=gcrs.WebMercator())
+                ax2 = gplt.choropleth(geo_from_countries, hue=tons, scheme=scheme, cmap='Greens', ax=ax)
+                # gplt.choropleth(geo_country, hue=[1],  cmap='gray', ax=ax2)
+                plt.title(country.capitalize())
+                plt.show()
+            else:
+                print(F"------------- failed ------------")
+                print(list(geo_from_countries["name"]))
+                print(countries)
+
+    exit()
+    ##
+
 
     input_folder = config[WorldLitter.output_folder]
     input_file = config[WorldLitter.output_file]
@@ -177,17 +228,11 @@ if __name__ == "__main__":
     lats = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lons = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
-    # This will plot the output netcdf from ocean parcels
-    # plotTrajectoriesFile(file_name)
-
-    input_data_folder = "/data/COAPS_Net/work/ozavala/WorldLitterOutput/YesWinds_YesDiffusion_NoUnbeaching/"
-    output_folder =  "/data/UN_Litter_data/output/OutputImagesAcc"
-    # Here I'm plotting all the accumulated files for 10 years (it will never end)
-    # plotOceanParcelsAccumulatedResults(input_data_folder, 2010, 2020, dt=1)
-
+    # ------------------- Parallel plots (not accumulated) ---------------
     # Here I'm plotting separated files
     input_data_folder = "/data/UN_Litter_data/output/YesWinds_YesDiffusion_NoUnbeaching"
-    output_folder = "/data/UN_Litter_data/output/OutputImages"
+    # output_folder = "/data/UN_Litter_data/output/OutputImages"
+    output_folder = "/home/olmozavala/Desktop/DELETE"
     TOT_PROC = 10
     p = Pool(TOT_PROC)
     # for year in range(2010, 2011):
@@ -197,17 +242,16 @@ if __name__ == "__main__":
             for month in range(1, 2):
                 print(F"===================== MONTH {month} ====================")
                 file_name = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_{year}_{month:02d}.nc"
-                output_folder = join("/data/UN_Litter_data/output/OutputImages", F"{year}_{month:02d}")
+                output_folder = join(output_folder, F"{year}_{month:02d}")
                 print(file_name)
                 p.starmap(plotOceanParcelOutputParallel, [[TOT_PROC, procid, input_data_folder, output_folder, file_name, False, 1] for procid in range(TOT_PROC)])
         except Exception as e:
             print(F"Failed for {year}: {e}")
 
+    # ---------- Plots JSON files ----------------
     # This plots directly the json file
     # json_file = F"/var/www/html/data/6/{input_file.replace('.nc','_00.json')}"
     # json_file = F"/var/www/html/data/6/Single_Release_FiveYears_EachMonth_2010_01_04.json"
     # json_file = F"/var/www/html/data/6/JUN22JUN22Test_Unbeaching_00.json"
     # plotJsonFile(json_file)
-
-##
 

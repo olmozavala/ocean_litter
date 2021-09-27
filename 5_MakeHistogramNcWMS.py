@@ -199,6 +199,8 @@ if __name__ == "__main__":
         else:
             c_histo += ds['histo'][:]
 
+        ds.close()
+
     f_histo = c_histo/total_days
     print(F"Saving merged file.... min value: {np.amin(f_histo)} max value: {np.amax(f_histo)}")
     ds = xr.Dataset({"histo": (("lat", "lon"), f_histo)}, {"lat": lat, "lon": lon})
