@@ -3,7 +3,7 @@ from enum import Enum
 class Preproc(Enum):
     shapes_folder = 1
 
-class WorldLitter(Enum):
+class GlobalModel(Enum):
     years = 1
     base_folder = 2
     loc_folder = 3

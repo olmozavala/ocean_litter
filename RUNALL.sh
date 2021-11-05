@@ -1,14 +1,14 @@
 #!/bin/bash
 
 start_date_str="2010-01-01"
-end_date_str="2010-01-06"
+end_date_str="2011-01-06"
 output_path="/home/data/UN_Litter_data/output"
 run_name="TEST"
-inc_per_run=1
+inc_per_run=10
 
 t=0
-c_start_date=$(date --date="${start_date_str} +$((t)) days")
-c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days +%Y-%m-%d")
+c_start_date=$(date --date="${start_date_str} +$((t)) days" +"%Y-%m-%d")
+c_end_date=$(date --date="${start_date_str} +$((t+inc_per_run)) days" +"%Y-%m-%d")
 end_date=$(date --date="${end_date_str}")
 
 c_start_date_sec=$(date --date="${start_date_str} +$((t)) days" "+%s")
@@ -26,7 +26,7 @@ do
     cmd="mpirun -np 8 python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True False False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
   fi
   echo $cmd
-  `$cmd > 'CurrentRun.log'`
+  #`$cmd > 'CurrentRun.log'`
   t=$[$t+$inc_per_run]
   c_start_date_sec=$(date --date="${start_date_str} +$((t)) days" "+%s")
   c_start_date=$(date --date="${start_date_str} +$((t)) days" "+%Y-%m-%d")

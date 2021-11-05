@@ -6,7 +6,7 @@ import numpy as np
 import functools
 import geopandas as gpd
 from config.MainConfig import get_preproc_config
-from config.params import WorldLitter, Preproc
+from config.params import GlobalModel, Preproc
 config = get_preproc_config()
 
 def indexForCountries(countries):
@@ -17,7 +17,7 @@ def indexForCountries(countries):
     :return:
     """
     config = get_preproc_config()
-    countries_file_name = config[WorldLitter.countries_file]
+    countries_file_name = config[GlobalModel.countries_file]
     df_country_list = pd.read_csv(countries_file_name, index_col=0)
     return df_country_list.loc[countries]
 

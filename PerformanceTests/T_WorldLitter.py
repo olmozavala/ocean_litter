@@ -6,26 +6,26 @@ from os.path import join
 from kernels.wl_kernels import periodicBC, RandomWalkSphere, BrownianMotion2D, EricSolution, BrownianMotion2D
 from utils.io_hycom import read_files
 import functools
-from config.params import WorldLitter
+from config.params import GlobalModel
 from config.MainConfig import get_op_config
 import sys
 from netCDF4 import Dataset
 
 def main(start_date = -1, end_date = -1, name=''):
     config = get_op_config()
-    years = config[WorldLitter.years]
-    base_folder = config[WorldLitter.base_folder]
-    release_loc_folder = config[WorldLitter.loc_folder]
-    output_file = join(config[WorldLitter.output_folder], F"{name}_{config[WorldLitter.output_file]}")
-    lat_files = config[WorldLitter.lat_files]
-    lon_files = config[WorldLitter.lon_files]
-    dt = config[WorldLitter.dt]
+    years = config[GlobalModel.years]
+    base_folder = config[GlobalModel.base_folder]
+    release_loc_folder = config[GlobalModel.loc_folder]
+    output_file = join(config[GlobalModel.output_folder], F"{name}_{config[GlobalModel.output_file]}")
+    lat_files = config[GlobalModel.lat_files]
+    lon_files = config[GlobalModel.lon_files]
+    dt = config[GlobalModel.dt]
     kh = 1
-    repeat_release = config[WorldLitter.repeat_release]
+    repeat_release = config[GlobalModel.repeat_release]
     if start_date == -1:
-        start_date = config[WorldLitter.start_date]
+        start_date = config[GlobalModel.start_date]
     if end_date == -1:
-        end_date = config[WorldLitter.end_date]
+        end_date = config[GlobalModel.end_date]
     run_time = timedelta(seconds=(end_date - start_date).total_seconds())
 
     file_names = read_files(base_folder, years, wind=False, start_date=start_date, end_date=end_date)
@@ -93,7 +93,7 @@ def main(start_date = -1, end_date = -1, name=''):
             pset = ParticleSet(fieldset=winds_currents_fieldset, pclass=JITParticle, lon=lon0, lat=lat0)
 
         print(F"Running with {pset.size} number of particles", flush=True)
-        out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
+        out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[GlobalModel.output_freq])
         t = time.time()
         # pset.execute(AdvectionRK4,
         # pset.execute(AdvectionRK4 + pset.Kernel(periodicBC),

@@ -15,7 +15,7 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 from multiprocessing import Pool
 from utils.ParticlesByCountry import indexForCountries
 
@@ -266,13 +266,13 @@ def plotJsonFile(file_name):
 if __name__ == "__main__":
     config = get_op_config()
 
-    input_folder = config[WorldLitter.output_folder]
-    input_file = config[WorldLitter.output_file]
+    input_folder = config[GlobalModel.output_folder]
+    input_file = config[GlobalModel.output_file]
     file_name = join(input_folder, input_file)
 
-    lat_files = config[WorldLitter.lat_files]
-    lon_files = config[WorldLitter.lon_files]
-    release_loc_folder = config[WorldLitter.loc_folder]
+    lat_files = config[GlobalModel.lat_files]
+    lon_files = config[GlobalModel.lon_files]
+    release_loc_folder = config[GlobalModel.loc_folder]
     lats = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lons = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
@@ -285,13 +285,13 @@ if __name__ == "__main__":
 
     # ------------------- Accumulated plots ---------------
     # Here I'm plotting all the accumulated files for 10 years (it will never end)
-    # countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
-    # plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, 2010, 2020, dt=1, countries=countries)
+    countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
+    plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, 2010, 2020, dt=1, countries=countries)
 
     # ------------------- Accumulated plots ---------------
     # Here I'm plotting all the accumulated files for 10 years colored by particle time
-    countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
-    plotOceanParcelsAccumulatedResultsByParticleTime(input_data_folder, output_folder, 2010, 2020, dt=31, countries=countries)
+    # countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
+    # plotOceanParcelsAccumulatedResultsByParticleTime(input_data_folder, output_folder, 2010, 2020, dt=31, countries=countries)
 
     # ------------------- Parallel plots (not accumulated) ---------------
     # Here I'm plotting separated files

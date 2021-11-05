@@ -18,11 +18,17 @@
     * Main `ozavala@ozavala.coaps.fsu.edu/var/www/virtualhosts/marinelitter.coaps.fsu.edu`
     * Dev `ozavala@ozavala.coaps.fsu.edu/var/www/virtualhosts/ozavala.coaps.fsu.edu/marine_litter_dev`
 
+## Preprocessing steps 
+### Reduce countires shapefile size (reduce level of detail on polyons with QGIS)
+
+## Files
 ### 0_1_Combine_Locations_with_Countries_and_Oceans  (Interpreter geoeoas)
 Inputs: 
-  `oceans_oz.shp`  shapefile with the oceans
-  `ne_50m_adming_0_countries.shp` shapefile with the countries limits
-Outputs: `ParticlesByCountry.csv` file.
+  * `oceans_oz.shp`  shapefile with the oceans
+  * `ne_50m_adming_0_countries.shp` shapefile with the countries limits
+Outputs: 
+  * `ParticlesByCountry.csv` file.
+   
 It reads the start locations of the particles, then it makes a buffer of each country and matches
 the particles with one of the countries. It performs the same idea with the oceans and assigns
 one or more oceans into each country.

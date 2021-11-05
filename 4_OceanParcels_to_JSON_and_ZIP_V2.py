@@ -13,7 +13,7 @@ import zlib
 import pandas as pd
 from utils.ParticlesByCountry import case1
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import matplotlib.pyplot as plt
 
 def createBinaryFileSingle():
@@ -32,11 +32,11 @@ def createBinaryFileSingle():
     config = get_op_config()
 
     # ------- Home ---------
-    input_folder = config[WorldLitter.output_folder]
-    input_file = config[WorldLitter.output_file]
-    output_folder = config[WorldLitter.output_folder_web]
+    input_folder = config[GlobalModel.output_folder]
+    input_file = config[GlobalModel.output_file]
+    output_folder = config[GlobalModel.output_folder_web]
 
-    countries_file_name = config[WorldLitter.countries_file]
+    countries_file_name = config[GlobalModel.countries_file]
     # Reading the json file with the names and geometries of the countries
     df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
@@ -154,10 +154,10 @@ def createBinaryFileMultiple(input_file):
     config = get_op_config()
 
     # ------- Home ---------
-    input_folder = config[WorldLitter.output_folder]
-    output_folder = config[WorldLitter.output_folder_web]
+    input_folder = config[GlobalModel.output_folder]
+    output_folder = config[GlobalModel.output_folder_web]
 
-    countries_file_name = config[WorldLitter.countries_file]
+    countries_file_name = config[GlobalModel.countries_file]
     # Reading the json file with the names and geometries of the countries
     df_country_list = pd.read_csv(countries_file_name, index_col=0)
 

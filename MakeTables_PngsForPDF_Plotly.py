@@ -2,23 +2,19 @@ from os.path import join
 import traceback
 import json
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import plotly.graph_objs as go
 import numpy as np
 import plotly.graph_objects as go
 
 MAX_ROWS = 15
 config = get_op_config()
-input_file = join(config[WorldLitter.output_folder_web], 'ReachedTablesData.json')
+input_file = join(config[GlobalModel.output_folder_web], 'ReachedTablesData.json')
 print(F"Reading data from: {input_file}")
-skip_countries = ["taiwan"]
+skip_countries = []
+# Reads all the data from the specified json file
 with open(input_file) as f:
     data = json.load(f)
-
-def main():
-    output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/"
-    makeTables(data, output_folder)
-
 
 def addRows(data, data_type):
     add_others = False
@@ -76,7 +72,7 @@ def dashPlotTable(country_name,  to_data, from_data, title, output_folder):
                                                line_color='gray',
                                                height=25),
                                    cells=dict(values=[rows_from, rows_to],
-                                              fill_color=[[rowEvenColor if i % 2 == 1 else rowOddColor for i in range(len(rows_from))]],
+                                              fill_color=[[rowEvenColor if i % 2 == 1 else rowOddColor for i in range(len(rows_from) + len(rows_to))]],
                                               line_color='gray',
                                               height=25)
                                    )])
@@ -103,8 +99,19 @@ def makeTables(data, output_folder):
             continue
 
         try:
-            to_data = data[country_name]['to']
-            from_data = data[country_name]['from']
+            to_data = {'name':country_name,'tot_tons':0,'to':[]}
+            from_data = {'name':country_name,
+                         'tot_tons':0,
+                         'ocean_tons':0,
+                         'ocean_perc':0,
+                         'beach_tons':0,
+                         'beach_perc':0,
+                         'from':[]}
+            if 'to' in data[country_name].keys():
+                to_data = data[country_name]['to']
+            if 'from' in data[country_name].keys():
+                from_data = data[country_name]['from']
+
             title = F"""{country_name.capitalize()} exports approximately {formatNumbers(from_data['tot_tons'])} tons in ten years <br>
 {formatNumbers(int(from_data['ocean_tons']))} ({from_data['ocean_perc']}%) end up in the ocean  <br>
 {formatNumbers(int(from_data['beach_tons']))} ({from_data['beach_perc']}%) end up in the beach <br>
@@ -116,7 +123,5 @@ def makeTables(data, output_folder):
     return tables
 
 if __name__ == '__main__':
-    main()
-
-##
-
+    output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/"
+    makeTables(data, output_folder)

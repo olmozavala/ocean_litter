@@ -5,7 +5,7 @@ import numpy as np
 import functools
 import matplotlib.pyplot as plt
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import multiprocessing as mp
@@ -47,7 +47,7 @@ def make_hist(config, input_file):
     resolution_txt = "one_tenth"  # In degrees
 
     # Reads input folders
-    input_folder = config[WorldLitter.output_folder]
+    input_folder = config[GlobalModel.output_folder]
     file_name = join(input_folder, input_file)
 
     # Creates output folders and file names

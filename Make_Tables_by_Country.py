@@ -6,11 +6,11 @@ from enum import Enum
 import json
 from utils.several_utils import replace_names
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import numpy as np
 from shapely.geometry import Polygon, Point, MultiPoint
 from config.MainConfig import get_preproc_config
-from config.params import WorldLitter, Preproc
+from config.params import GlobalModel, Preproc
 import shapely.speedups
 import matplotlib.pyplot as plt
 import collections
@@ -108,14 +108,14 @@ def readfrom_nodecay(f, json_names, json_ids):
         print(F"Not found: {table_country_name}")
         return -1, table_country_name
 
-def readto(f, json_names, json_ids):
+def readto(f):
     all_lines = f.readlines()
 
     first_line = all_lines[0].split(';')
     table_country_name = remove_brackets(first_line[6]).lower()
     country_id = remove_brackets(first_line[5])
     try:
-        country_name = json_names[json_ids.index(country_id)].lower()
+        country_name = all_lines[0].split('[')[1].split(']')[0]
 
         tot_tons = int(first_line[0])
         data_to = []
@@ -141,7 +141,7 @@ def readto(f, json_names, json_ids):
         print(F"Not found: {table_country_name}")
         return -1, table_country_name
 
-def readfrom(f, json_names, json_ids):
+def readfrom(f):
     """
     Reads a single file with the statistics and matches the name with the json names being used
     :param f:
@@ -162,7 +162,7 @@ def readfrom(f, json_names, json_ids):
     at_beach_perc = float(remove_brackets(all_lines[2].split(';')[1]))
 
     try:
-        country_name = json_names[json_ids.index(country_id)].lower()
+        country_name = all_lines[0].split('[')[1].split(']')[0]
 
         data_from = []
         for line in all_lines[4:]:
@@ -245,62 +245,55 @@ def jsonToCSV(json_object, file_name):
     print("Done!")
 
 if __name__ == "__main__":
-    # TODO First copy all the tables from to data/reached_data_tables inside the project
+    # TODO First copy all the tables from bellow address to ./data/reached_data_tables inside this project
     # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
     config = get_op_config()
 
-    stats_folder = config[WorldLitter.stats_folder]
-    output_web_folder = config[WorldLitter.output_folder_web]
+    stats_folder = config[GlobalModel.stats_folder]
+    output_web_folder = config[GlobalModel.output_folder_web]
     all_files = os.listdir(stats_folder)
+    all_files.sort()
     shapely.speedups.enable()
-    json_countries_file = join(output_web_folder,'countries.json')
 
     not_found = []
     # Iterates over the countries in countries.json
-    with open(json_countries_file) as f:
-        data = json.load(f)
-        all_json_names = [x['properties']['name'] for x in data['features']]
-        all_ids = [x['properties']['id'] for x in data['features']]
+    all_names = []
+    json_object = {}
+    for cur_file in all_files:
+        if cur_file.find("swp") == -1:
+            if cur_file.find("_from_") != -1:
+                print(F"------ Reading file: {cur_file} --------")
+                f = open(join(stats_folder, cur_file), "r")
+                obj_from, country_name = readfrom(f)
+                if obj_from == -1: # not found
+                    if not(country_name in not_found):
+                        not_found.append(country_name)
 
-        all_names = []
-        json_object = {}
-        for cur_file in all_files:
-            if cur_file.find("swp") == -1:
-                if cur_file.find("_from_") != -1:
-                    print(F"------ Reading file: {cur_file} --------")
-                    f = open(join(stats_folder, cur_file), "r")
-                    obj_from, country_name = readfrom(f, all_json_names, all_ids)
-                    # obj_from, country_name = readfrom_nodecay(f, all_json_names, all_ids)
-                    if obj_from == -1: # not found
-                        if not(country_name in not_found):
-                            not_found.append(country_name)
+                if not(country_name in json_object.keys()):
+                    json_object[country_name] = {}
+                json_object[country_name]['from'] = obj_from
+                if not(country_name in all_names):
+                    # Comment this part, only for debuggin
+                    all_names.append(country_name)
 
-                    if not(country_name in json_object.keys()):
-                        json_object[country_name] = {}
-                    json_object[country_name]['from'] = obj_from
-                    if not(country_name in all_names):
-                        # Comment this part, only for debuggin
-                        all_names.append(country_name)
+            if cur_file.find("_to_") != -1:
+                print(F"------ Reading file: {cur_file} --------")
+                f = open(join(stats_folder, cur_file), "r")
+                obj_to, country_name = readto(f)
+                if obj_to == -1: # not found
+                    if not(country_name in not_found):
+                        not_found.append(country_name)
 
-                if cur_file.find("_to_") != -1:
-                    print(F"------ Reading file: {cur_file} --------")
-                    f = open(join(stats_folder, cur_file), "r")
-                    obj_from, country_name = readto(f, all_json_names, all_ids)
-                    # obj_from, country_name = readto_nodecay(f, all_json_names, all_ids)
-                    if obj_from == -1: # not found
-                        if not(country_name in not_found):
-                            not_found.append(country_name)
+                if not(country_name in json_object.keys()):
+                    json_object[country_name] = {}
+                json_object[country_name]['to'] = obj_to
 
-                    if not(country_name in json_object.keys()):
-                        json_object[country_name] = {}
-                    json_object[country_name]['to'] = obj_from
-
-    json_txt = json.dumps(json_object)
+    json_txt = json.dumps(dict(sorted(json_object.items())))
     output_file = join(output_web_folder, 'ReachedTablesData.json')
     output_file_csv = join(output_web_folder, 'ReachedTablesData.csv')
-    jsonToCSV(json_object, output_file_csv)
-    f = open(output_file, "w+")
-    f.write(json_txt)
+    # jsonToCSV(json_object, output_file_csv)
+    # f = open(output_file, "w+")
+    # f.write(json_txt)
 
     not_found.sort()
     print(F"Saved at: {output_web_folder}")

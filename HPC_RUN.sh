@@ -8,12 +8,11 @@
 #SBATCH --mem=128G
 #SBATCH --mail-type=FAIL
 
-module load intel-openmpi
-module load anaconda3.7.3
+module load intel openmpi
 
 start_date_str="2010-01-01"
 end_date_str="2014-01-06"
-output_path="/gpfs/home/osz09/scratch/output/"
+output_path="/gpfs/home/osz09/scratch/globaldebrisoutput/"
 run_name="YesWinds_NoDiffusion_2010_01"
 inc_per_run=30
 
