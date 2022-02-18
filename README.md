@@ -1,3 +1,17 @@
+# RUN AT HPC
+To run in parallel the `HPC_RUN.sh` modifies the `generalrun_hpc.sh` file and creates multiple
+copies of it, one for each monthly release. 
+Each copy of `generalrun_hpc.sh` will be in charge of a single monthly release. It stops and
+restarts the run every **30** days (or other).
+
+To make a new run you have to:
+
+1) Modify `HPC_RUN.sh` and define the years and months you want to generate releases
+2) Modify `generalrun_hpc_sh` and specify:
+   1) End date for all the releases `end_date_str`
+   2) Define the output folder and the name of your run (each name will be appended with the year and month of the release)
+
+
 # Folders
 
 * Local Data `/data/UN_Litter_data`

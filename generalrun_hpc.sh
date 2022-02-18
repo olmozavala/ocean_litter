@@ -13,11 +13,8 @@
 module load intel-openmpi
 module load anaconda3.7.3
 
-#srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_WorldLitter.py '20YEAR-MONTH-01:0' '2015-01-01:0' True False False 'YesWinds_NoDiffusion_20YEAR_MONTH' True 30 > YesWinds_NoDiffusion_20YEAR_MONTH.log
-
 start_date_str="20YEAR-MONTH-01"
-#start_date_str="2015-01-01"
-end_date_str="2020-01-01"
+end_date_str="2022-01-01"
 output_path="/gpfs/home/osz09/scratch/output"
 run_name="TenYears_YesWinds_YesDiffusion_NoUnbeaching_20YEAR_MONTH"
 inc_per_run=30
@@ -46,7 +43,6 @@ do
   then
     # In this case it is only running inc_per_run days normally
     cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False ${run_name}_${c_start_date}_${c_end_date}"
-    #cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False $run_name $output_path/YesWinds_YesDiffusion/YesWinds_YesDiffusion_NoUnbeaching_20YEAR_MONTH.nc $inc_per_run"
   else
     # In this case it should start from the previous coordinates
     cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 0_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
@@ -68,15 +64,17 @@ do
   fi
 done
 
-#cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 2_MergeRuns.py ${start_date_str}:0 ${end_date_str}:0 False ${run_name} ${inc_per_run}"
-#cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 2_MergeRuns.py 2014-12-02:0 ${end_date_str}:0 False ${run_name} ${inc_per_run}"
-#echo $cmd
-#`$cmd > 'Merge_20YEAR_MONTH.log'`
+# This part of the code merges all the intermediate runs into a single netCDF
+cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 2_MergeRuns.py ${start_date_str}:0 ${end_date_str}:0 False ${run_name} ${inc_per_run}"
+echo $cmd
+`$cmd > 'Merge_20YEAR_MONTH.log'`
 
+# Here we remove all the intermediate netcdf files
 #cmd="rm  ${output_path}/${run_name}_*"
 #echo $cmd
 #`$cmd`
-#
+
+# Removes any folders left from Ocean Parcels
 # These are the 'temporal' folders from OP
 #cmd="rm -rf ${output_path}/out-*"
 #echo $cmd
