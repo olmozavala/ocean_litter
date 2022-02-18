@@ -6,15 +6,16 @@ from config.params import GlobalModel
 import plotly.graph_objs as go
 import numpy as np
 import plotly.graph_objects as go
+import os
+import subprocess
+import shutil
 
 MAX_ROWS = 15
 config = get_op_config()
-input_file = join(config[GlobalModel.output_folder_web], 'ReachedTablesData.json')
-print(F"Reading data from: {input_file}")
 skip_countries = []
-# Reads all the data from the specified json file
-with open(input_file) as f:
-    data = json.load(f)
+data = {}
+global_year = 0
+
 
 def addRows(data, data_type):
     add_others = False
@@ -112,16 +113,59 @@ def makeTables(data, output_folder):
             if 'from' in data[country_name].keys():
                 from_data = data[country_name]['from']
 
-            title = F"""{country_name.capitalize()} exports approximately {formatNumbers(from_data['tot_tons'])} tons in ten years <br>
+            title = F"""{country_name.capitalize()} exports approximately {formatNumbers(from_data['tot_tons'])} tons from 2010 to {global_year} <br>
 {formatNumbers(int(from_data['ocean_tons']))} ({from_data['ocean_perc']}%) end up in the ocean  <br>
 {formatNumbers(int(from_data['beach_tons']))} ({from_data['beach_perc']}%) end up in the beach <br>
 """
             dashPlotTable(country_name, to_data, from_data, title, output_folder),
         except Exception as e:
             # print(F"Failed for country: {country_name}:{i}: {traceback.print_exc()}")
-            print(F"Failed for country: {country_name} Index:{i}")
+            print(F"Failed for country: {country_name} Index:{i} e:{e}")
     return tables
 
+def makePDF(input_folder, output_file):
+    # Copy script
+    print(F"Making pdf inside {input_folder}....")
+    sh_file = "pngTopdf.sh"
+    if not os.path.exists(join(input_folder, sh_file)):
+        shutil.copyfile(sh_file, join(input_folder,sh_file))
+    # Run it
+    p = subprocess.Popen(["sh", join(input_folder,sh_file)], cwd=input_folder)
+    p.wait()
+    # Copy output file as output_folder
+    shutil.copyfile(F"{join(input_folder,'ReachedTablesData.pdf')}", output_file)
+    print(F"Saved to {output_file}")
+    print("Done!")
+
+
 if __name__ == '__main__':
-    output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/"
-    makeTables(data, output_folder)
+
+    # input_file = join(config[GlobalModel.output_folder_web], 'ReachedTablesData.json')
+    # print(F"Reading data from: {input_file}")
+    # output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/"
+    # Reads all the data from the specified json file
+    # with open(input_file) as f:
+    #     data = json.load(f)
+    # makeTables(data, output_folder)
+
+    # ---------------- Multiple years ---------------
+    years = range(2017,2022)
+    in_folder= "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
+    out_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/MultipleYears"
+    pdf_output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/"
+
+    for root_year in years: # I named it root_year because it create conflicts with other functions
+        global_year = root_year
+        input_file = join(in_folder, str(root_year), 'ReachedTablesData.json')
+        print(F"Reading data from: {input_file}")
+        output_folder = join(out_folder, str(root_year))
+
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        with open(input_file) as f:
+            data = json.load(f)
+
+        makeTables(data, output_folder)
+        output_file = join(pdf_output_folder, str(root_year), F"ReachedTablesData.pdf")
+        makePDF(output_folder, output_file)

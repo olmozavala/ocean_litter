@@ -170,10 +170,16 @@ def readfrom(f):
             # tons = float(c_line[0])
             # perc = float(c_line[1])
             # name = remove_brackets(c_line[3])
-            c_line = line
-            tons = float(c_line[0:8])
-            perc = float(c_line[10:14])
-            name = remove_brackets(c_line[21:-1])
+
+            # c_line = line
+            # tons = float(c_line[0:8])
+            # perc = float(c_line[10:14])
+            # name = remove_brackets(c_line[21:-1])
+
+            c_line = line.split(";")
+            tons = float(c_line[0])
+            perc = float(remove_brackets(c_line[1]))
+            name = remove_brackets(c_line[3])
 
             tobj = {
                 'name': name,
@@ -193,19 +199,19 @@ def readfrom(f):
         }
         return obj_from, country_name
     except Exception as e:
-        print(F"Not found: {table_country_name}")
+        print(F"Not found: {table_country_name} Exception: {e}")
         return -1, table_country_name
 
 def jsonToCSV(json_object, file_name):
     print("Converting JSON to CSV")
-    new_country = "Country Name, Tons Exported, Ends in the Ocean, Ends in the beach, \n"
     json_object = collections.OrderedDict(sorted(json_object.items()))
+    header_line = "Country Name, Tons Exported, Ends in the Ocean, Ends in the beach"
     csv_file = ""
     for country_name in json_object:
         country = json_object[country_name]
 
         try:
-            country_txt = "\n" + new_country
+            country_txt = F"\n {header_line},Waste from {country_name.capitalize()},, Waste towards {country_name.capitalize()} \n"
             country_txt += F"{country_name.capitalize()}"
             # Adding the from countries
             from_data = []
@@ -214,12 +220,12 @@ def jsonToCSV(json_object, file_name):
                 country_txt += F", {country['from']['tot_tons']}, {country['from']['ocean_tons']}, {country['from']['beach_tons']} \n"
                 if 'from' in country['from']:
                     for from_country in country['from']['from']:
-                        from_data.append(F"Tons to {from_country['name']}, {from_country['tons']},")
+                        from_data.append(F"To {from_country['name']}, {from_country['tons']},")
 
             if 'to' in country:
                 # Adding the to countries
                 for to_country in country['to']['to']:
-                    to_data.append(F"Tons from {to_country['name']}, {to_country['tons']},")
+                    to_data.append(F"From {to_country['name']}, {to_country['tons']},")
 
             rows = max(len(from_data), len(to_data))
             for i in range(rows):
@@ -244,13 +250,8 @@ def jsonToCSV(json_object, file_name):
 
     print("Done!")
 
-if __name__ == "__main__":
-    # TODO First copy all the tables from bellow address to ./data/reached_data_tables inside this project
-    # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
-    config = get_op_config()
+def makeJsonAndCsvFiles(stats_folder, output_folder):
 
-    stats_folder = config[GlobalModel.stats_folder]
-    output_web_folder = config[GlobalModel.output_folder_web]
     all_files = os.listdir(stats_folder)
     all_files.sort()
     shapely.speedups.enable()
@@ -288,14 +289,40 @@ if __name__ == "__main__":
                     json_object[country_name] = {}
                 json_object[country_name]['to'] = obj_to
 
+    # Eliminating countries that do not have from and to
+    keys = list(json_object.keys())
+    for key in keys:
+        if 'from' not in json_object[key]:
+            del json_object[key]
+
     json_txt = json.dumps(dict(sorted(json_object.items())))
-    output_file = join(output_web_folder, 'ReachedTablesData.json')
-    output_file_csv = join(output_web_folder, 'ReachedTablesData.csv')
-    # jsonToCSV(json_object, output_file_csv)
-    # f = open(output_file, "w+")
-    # f.write(json_txt)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    output_file = join(output_folder, 'ReachedTablesData.json')
+    output_file_csv = join(output_folder, 'ReachedTablesData.csv')
+    jsonToCSV(json_object, output_file_csv)
+    f = open(output_file, "w+")
+    f.write(json_txt)
 
     not_found.sort()
-    print(F"Saved at: {output_web_folder}")
+    print(F"Saved at: {output_folder}")
     print(F"It failed for a total of {len(not_found)}:\n {not_found}")
 
+
+if __name__ == "__main__":
+    # TODO First copy all the tables from bellow address to ./data/reached_data_tables inside this project
+    # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
+    config = get_op_config()
+
+    # input_folder= config[GlobalModel.stats_folder]
+    # output_folder = config[GlobalModel.output_folder]
+    # makeJsonAndCsvFiles(input_folder, output_folder)
+    # ----------------- Multiple years ---------------
+    years = range(2017,2022)
+    rfolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/MultipleYears"
+    ofolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
+    for year in years:
+        input_folder = join(rfolder, F"C{year}_12")
+        output_folder = join(ofolder, F"{year}")
+        makeJsonAndCsvFiles(input_folder, output_folder)

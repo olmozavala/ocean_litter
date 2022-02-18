@@ -87,7 +87,7 @@ def make_hist(config, input_file):
     acum_histo_par = np.array(acum_histo_par)
     acum_histo = np.sum(acum_histo_par, axis=0)
     # REVIEW THIS PART!!! THE 12 IS BECAUSE WE ASSUME 12  RELEASES PER YEAR
-    tons_per_particle = ((6.4e6)/(tot_particles * 12))
+    tons_per_particle = ((6.5e6)/(tot_particles * 12))
     acum_histo = tons_per_particle*acum_histo + 1
     idx = acum_histo == 1
     acum_histo[idx] = np.nan

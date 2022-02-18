@@ -1,11 +1,10 @@
-from datetime import datetime
 from matplotlib import cm
 import os
 from os.path import join, exists
 from netCDF4 import Dataset
 import numpy as np
 import functools
-# from parcels.scripts.plottrajectoriesfile import plotTrajectoriesFile
+from parcels.scripts.plottrajectoriesfile import plotTrajectoriesFile
 import json
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -23,11 +22,11 @@ from utils.ParticlesByCountry import indexForCountries
 def dateFromCF(str_date):
     sp = str_date.split(' ')
     # For the moment it assumes it is in days 'days since 2010-01-01 00:00:00'
-    return datetime.strptime(sp[2],'%Y-%m-%d')
+    return datetime.strptime(sp[2][:10],'%Y-%m-%d')
 
 def plotOceanParcelsAccumulatedResultsByParticleTime(input_data_folder, output_folder, start_year, end_year, dt=1, countries="all"):
     """
-   It plots the ACCUMULATED or NOT particles from all the files.
+   It plots the ACCUMULATED particles from all the files.
    :param input_data_folder:
    :param start_year: when to start
    :param end_year: when to end
@@ -78,8 +77,8 @@ def plotOceanParcelsAccumulatedResultsByParticleTime(input_data_folder, output_f
                 ax.scatter(open_files[c_month_idx].variables['lon'][:,c_time_step], open_files[c_month_idx].variables['lat'][:,c_time_step], color='c', s=1)
             else:
                 # c_color = ((c_month_idx)/(months+1),0,0)
-                c_color =  cmap(np.min([1.0, .2 + c_month_idx/(months+1)]))  # Los primeros meses son mas oscuros
-                # alpha = np.min([1.0, .2 + (c_month_idx + 1)/(months+1)])   # Los primeros meses son mas transparentes
+                c_color =  cmap(np.min([1.0, .9 - c_month_idx/(months+1)]))  # Los primeros meses son mas oscuros
+                # alpha = np.min([1.0, .2 + (c_month_idx + 1)/(months+1)])   # Los primeros meses son mas claros/transparentes
                 alpha = 1
                 ax.scatter(open_files[c_month_idx].variables['lon'][idx_locations,c_time_step],
                            open_files[c_month_idx].variables['lat'][idx_locations,c_time_step],
@@ -95,7 +94,7 @@ def plotOceanParcelsAccumulatedResultsByParticleTime(input_data_folder, output_f
 
 def plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, start_year, end_year, dt=1, countries="all"):
     """
-    It plots the ACCUMULATED or NOT particles from all the files.
+    It plots the ACCUMULATED particles from all the files.
     :param input_data_folder:
     :param start_year: when to start
     :param end_year: when to end
@@ -153,7 +152,7 @@ def plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, start_y
         plt.savefig(F"{output_folder}/{start_date.strftime('%Y_%m')}_{c_day_idx:04d}.png")
         plt.close()
 
-def plotOceanParcelWithBeaching(TOT_PROC, procid, input_data_folder, output_folder, file_name, usebeached=True, dt=1, ):
+def plotOceanParcelsParallelNotAccumulated(TOT_PROC, procid, input_data_folder, output_folder, file_name, usebeached=True, dt=1, ):
     """
     Plots not accumulated data with or without beaching
     :param TOT_PROC:
@@ -222,6 +221,47 @@ def plotOceanParcelWithBeaching(TOT_PROC, procid, input_data_folder, output_fold
             plt.savefig(F"{output_folder}/{c_time_step:04d}.png")
             plt.close()
 
+def plotOceanParcelsParallelSameDayDifferentReleases(TOT_PROC, procid, input_data_folder, output_folder, years, months, date_to_plot):
+    """
+    Plots a single day for multiple releases (with diferent colors
+    :param TOT_PROC:
+    :param procid:
+    :param input_data_folder:
+    :param output_folder:
+    :param years: Which year of releases we want to include
+    :param months: Which month of releases we want to include
+    :param date_to_plot: Which date we want to plot
+    :param file_name:
+    :return:
+    """
+    # -------------- Info about variables ---------------
+    if not(exists(output_folder)):
+        os.makedirs(output_folder)
+
+    for c_year in years:
+        for c_month in months:
+            # print(F"{c_year}_{c_month}")
+            file_name = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_{c_year}_{c_month:02d}.nc"
+            ds = Dataset(join(input_data_folder, file_name), "r", format="NETCDF4")
+            print(ds.variables['time'].units)
+            start_date = dateFromCF(ds.variables['time'].units)
+            # Computes the difference between the start_date and the received date
+            c_time_step = (date_to_plot - start_date).days
+            if c_time_step >= 0:
+                fig = plt.figure(figsize=(20,10))
+
+                lats = ds.variables['lat'][:,c_time_step]
+                lons = ds.variables['lon'][:,c_time_step]
+
+                # title = F'{file_name} \n Current time step: {c_time_step}'
+                title = F"Release: {c_year}_{c_month} date: {date_to_plot.strftime('%Y-%m-%d')}"
+
+                plotScatter(lats, lons, 'y', title)
+
+                # plt.show()
+                plt.savefig(F"{output_folder}/{c_year}_{c_month:02}_{date_to_plot.strftime('%Y-%m-%d')}.png")
+                plt.close()
+
 def plotScatter(lats, lons, color='b',title=''):
     """
     Default function to plot lat and lons as scatter plot
@@ -276,40 +316,55 @@ if __name__ == "__main__":
     lats = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lons = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 
-    input_data_folder = "/data/UN_Litter_data/output/TEN_YEARS/YesWinds_YesDiffusion_NoUnbeaching"
+    input_data_folder = "/data/COAPS_Net/work/ozavala/WorldLitterOutput/2010-2020_Eleven_Years"
     output_folder = "/home/olmozavala/Desktop/DELETE"
 
     # ------------------- For OceanParcels built in plots---------------
     # This will plot the output netcdf using ocean parcels function
+    # file_name = join(input_data_folder, "TenYears_YesWinds_YesDiffusion_NoUnbeaching_2010_01.nc")
     # plotTrajectoriesFile(file_name)
 
     # ------------------- Accumulated plots ---------------
     # Here I'm plotting all the accumulated files for 10 years (it will never end)
-    countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
-    plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, 2010, 2020, dt=1, countries=countries)
+    # countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
+    # plotOceanParcelsAccumulatedResults(input_data_folder, output_folder, 2010, 2020, dt=1, countries=countries)
 
-    # ------------------- Accumulated plots ---------------
+    # ------------------- Accumulated plots (dt is the dt of the particles and they are plotted with different colors)---------------
     # Here I'm plotting all the accumulated files for 10 years colored by particle time
     # countries = ["Cambodia","China","Indonesia", "South Korea", "Malaysia", "Philippines", "Thailand", "Vietnam"]
     # plotOceanParcelsAccumulatedResultsByParticleTime(input_data_folder, output_folder, 2010, 2020, dt=31, countries=countries)
 
     # ------------------- Parallel plots (not accumulated) ---------------
     # Here I'm plotting separated files
-    # output_folder = "/data/UN_Litter_data/output/OutputImages"
-    # TOT_PROC = 10
-    # p = Pool(TOT_PROC)
-    # # for year in range(2010, 2011):
+    TOT_PROC = 10
+    p = Pool(TOT_PROC)
+    dt = 1 # How often to plot
     # for year in range(2010, 2011):
-    #     try:
-    #         # for month in range(1, 13):
-    #         for month in range(1, 2):
-    #             print(F"===================== MONTH {month} ====================")
-    #             file_name = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_{year}_{month:02d}.nc"
-    #             output_folder = join(output_folder, F"{year}_{month:02d}")
-    #             print(file_name)
-    #             p.starmap(plotOceanParcelWithBeaching, [[TOT_PROC, procid, input_data_folder, output_folder, file_name, False, 1] for procid in range(TOT_PROC)])
-    #     except Exception as e:
-    #         print(F"Failed for {year}: {e}")
+    for year in range(2010, 2011):
+        try:
+            # for month in range(1, 13):
+            for month in range(1, 2):
+                print(F"===================== MONTH {month} ====================")
+                file_name = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_{year}_{month:02d}.nc"
+                output_folder = join(output_folder, F"{year}_{month:02d}")
+                print(file_name)
+                p.starmap(plotOceanParcelsParallelNotAccumulated, [[TOT_PROC, procid, input_data_folder, output_folder, file_name, False, dt] for procid in range(TOT_PROC)])
+        except Exception as e:
+            print(F"Failed for {year}: {e}")
+
+    # ------------------- Plots single day multiple releases
+    # Here I'm plotting separated files
+#     TOT_PROC = 10
+#     p = Pool(TOT_PROC)
+#     years = range(2010,2020)
+#     months = range(1,12)
+#     date_to_plot = datetime.strptime("2011-05-01","%Y-%m-%d")
+#     try:
+#         plotOceanParcelsParallelSameDayDifferentReleases(1, 0, input_data_folder, output_folder, years, months, date_to_plot)
+#         # p.starmap(plotOceanParcelsParallelSameDayDifferentReleases, [[TOT_PROC, procid, input_data_folder, output_folder, years, months, date_to_plot] for procid in range(TOT_PROC)])
+# # def plotOceanParcelsParallelSameDayDifferentReleases(TOT_PROC, procid, input_data_folder, output_folder, years, months, date_to_plot):
+#     except Exception as e:
+#         print(F"Failed: {e}")
 
     # ---------- Plots JSON files ----------------
     # This plots directly the json file
