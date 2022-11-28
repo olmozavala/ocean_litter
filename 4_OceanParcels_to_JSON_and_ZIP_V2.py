@@ -21,7 +21,7 @@ def createBinaryFileSingle():
     Creates binary and text files corresponding to the desired 'reduced' number of particles
     :return:
     """
-    all_reduce_particles_by = [2, 3, 4, 6]
+    all_reduce_particles_by = [2]
     min_number_particles = 20
     BEACHED = False  # Indicate if we are testing the beached particles
 
@@ -137,14 +137,14 @@ def createBinaryFileSingle():
 
     nc_file.close()
 
-def createBinaryFileMultiple(input_file):
+def createBinaryFileMultiple(input_folder, input_file, output_folder, sub_sample_by=[2], timesteps_by_file=200):
     """
     Creates binary and text files corresponding to the desired 'reduced' number of particles
     :return:
     """
-    all_reduce_particles_by = [3]
+    all_reduce_particles_by = sub_sample_by
     min_number_particles = 20
-    particlesEveryThisTimeSteps = 200  # How many timesteps save in each file
+    particlesEveryThisTimeSteps = timesteps_by_file# How many timesteps save in each file
     BEACHED = False  # Indicate if we are testing the beached particles
 
     def myfmt(r): # 'Round to 2 decimals'
@@ -154,10 +154,8 @@ def createBinaryFileMultiple(input_file):
     config = get_op_config()
 
     # ------- Home ---------
-    input_folder = config[GlobalModel.output_folder]
-    output_folder = config[GlobalModel.output_folder_web]
-
-    countries_file_name = config[GlobalModel.countries_file]
+    # countries_file_name = config[GlobalModel.countries_file]
+    countries_file_name = "/data/UN_Litter_data/Particles_by_Country_small.csv"
     # Reading the json file with the names and geometries of the countries
     df_country_list = pd.read_csv(countries_file_name, index_col=0)
 
@@ -219,8 +217,11 @@ def createBinaryFileMultiple(input_file):
                 cur_lon_all_part = lon[red_particles_for_country].filled()
                 if BEACHED:
                     cur_beached_all_part = beached[red_particles_for_country].filled() == 4
-                    countries[cur_country_name] = {'lat_lon': [vecfmt(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist(),
-                                                               vecfmt(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist()],
+
+                    # countries[cur_country_name] = {'lat_lon': [vecfmt(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist(),
+                    #                                            vecfmt(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))]).tolist()],
+                    countries[cur_country_name] = {'lat_lon': [np.araound(cur_lat_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))], 2),
+                                                               np.around(cur_lon_all_part[:, cur_chunk:int(min(cur_chunk+particlesEveryThisTimeSteps, tot_time_steps))], 2)],
                                                    'beached': [cur_beached_all_part.tolist()],
                                                    'oceans': [x for x in df_country_list.loc[cur_country_name]['oceans'].split(';')],
                                                    'continent': df_country_list.loc[cur_country_name]['continent']}
@@ -255,11 +256,11 @@ def createBinaryFileMultiple(input_file):
             f.close()
 
             # -------- Writing zip file (required because the website reads zip files) ---------------
-            print(F" Saving zip file {zip_output_file}.....")
-            with zipfile.ZipFile(zip_output_file, 'w') as zip_file:
-                zip_file.write(binary_file)
-            zip_file.close()
-            print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
+            # print(F" Saving zip file {zip_output_file}.....")
+            # with zipfile.ZipFile(zip_output_file, 'w') as zip_file:
+            #     zip_file.write(binary_file)
+            # zip_file.close()
+            # print(F"Original particles {glob_num_particles} assigned: {tot_assigned_particles}")
 
     nc_file.close()
 
@@ -297,9 +298,11 @@ def testBinaryAndHeaderFiles():
 
 if __name__ == "__main__":
     # createBinaryFileSingle()
-    testBinaryAndHeaderFiles()
+    # testBinaryAndHeaderFiles()
 
-    # for i in range(1,13):
-    #     input_file = F"YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
-    #     #input_file = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
-    #     createBinaryFileMultiple(input_file)
+    input_folder = "/data/UN_Litter_data/output/TEN_YEARS/YesWinds_YesDiffusion_NoUnbeaching"
+    output_folder = "/data/UN_Litter_data/output/TEN_YEARS/BinaryForWebsite"
+    for i in range(1,13):
+        # input_file = F"YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
+        input_file = F"TenYears_YesWinds_YesDiffusion_NoUnbeaching_2010_{i:02d}.nc"
+        createBinaryFileMultiple(input_folder, input_file, output_folder, [2], 500)
