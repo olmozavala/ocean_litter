@@ -1,0 +1,3 @@
+[submodule "eoas_pyutils"]
+	path = eoas_pyutils
+	url = git@github.com:olmozavala/eoas-pyutils.git

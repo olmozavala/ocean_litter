@@ -1,18 +1,41 @@
 # RUN AT HPC
+## Normal run (new releases)
 To run in parallel the `HPC_RUN.sh` modifies the `generalrun_hpc.sh` file and creates multiple
 copies of it, one for each monthly release. 
+**Warning**: be sure the *HPC running extra years* is commented out on the file.  
 Each copy of `generalrun_hpc.sh` will be in charge of a single monthly release. It stops and
 restarts the run every **30** days (or other).
 
 To make a new run you have to:
 
-1) Modify `HPC_RUN.sh` and define the years and months you want to generate releases
-2) Modify `generalrun_hpc_sh` and specify:
-   1) End date for all the releases `end_date_str`
-   2) Define the output folder and the name of your run (each name will be appended with the year and month of the release)
+1. Modify `HPC_RUN.sh` and define the years and months you want to generate releases
+2. Modify `generalrun_hpc_sh` and specify:
+   1. End date for all the releases `end_date_str`
+   2. Define the output folder and the name of your run (each name will be appended with the year and month of the release)
+
+
+## Extra year (appending to an existing runs)
+To run in parallel the `HPC_RUN.sh` modifies the `generalrun_hpc.sh` file and creates multiple
+copies of it, one for each monthly release. 
+**Warning**: be sure the *HPC running extra years* is commented out on the file.  
+Each copy of `generalrun_hpc.sh` will be in charge of a single monthly release. It stops and
+restarts the run every **30** days (or other).
+
+To make a new run you have to:
+
+1. Modify `HPC_RUN.sh` and define the years and months you want to generate releases
+2. Modify `generalrun_hpc_sh` and specify:
+   1. End date for all the releases `end_date_str`
+   2. Define the output folder and the name of your run (each name will be appended with the year and month of the release)
+
+
 
 
 # Folders
+
+* HPC Data
+    * Currents `/gpfs/home/osz09/scratch/world_litter_data/`
+
 
 * Local Data `/data/UN_Litter_data`
     * Test vector fields `/data/UN_Litter_data/HYCOM`
@@ -50,6 +73,16 @@ one or more oceans into each country.
 ### 1_WorldLitter.py
 Main code to run the Ocean Parcels lagrangian code. 
 It can be executed from from a restart file or not.
+It receives the following parameters:
+* Start date --> 'YYYY-MM-DD'
+* End date --> 'YYYY-MM-DD'
+* Contains winds --> Boolean ?? Not sure about this one
+* Perfrom diffusion --> Boolean
+* Perfrom unbeaching--> Boolean
+* **Name** --> Name of the run
+* (optiona for restart) **Restart file** --> Name of the run
+* Dayst to run --> Number of days to run
+
 
 ### 2_MergeRuns.py
 This file is in charge of merging Ocean Parcels outputs.

@@ -68,6 +68,9 @@ def runWithRestart(execution_days, config, start_date, end_date, winds, diffusio
 
 if __name__ == "__main__":
     if len(sys.argv) > 6:
+        # Print all the arguments received
+        print("Number of arguments: ", len(sys.argv), "arguments.")
+
         start_date = datetime.strptime(sys.argv[1], "%Y-%m-%d:%H")
         end_date = datetime.strptime(sys.argv[2], "%Y-%m-%d:%H")
         winds = str2bool(sys.argv[3])
@@ -75,8 +78,10 @@ if __name__ == "__main__":
         unbeaching = str2bool(sys.argv[5])
         name = sys.argv[6]
         config = get_op_config()
+
         print(F"Start date: {start_date} End date: {end_date} winds={winds} diffusion={diffusion} unbeaching={unbeaching}")
         print(F"Name: {name}")
+
         if len(sys.argv) >= 8:
             restart_file = sys.argv[7]
             execution_days = int(sys.argv[8])
