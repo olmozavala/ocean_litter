@@ -2,7 +2,7 @@ from os.path import join
 import traceback
 import json
 from config.MainConfig import get_op_config
-from config.params import GlobalModel
+from config.params import WorldLitter
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -13,7 +13,7 @@ import numpy as np
 
 
 config = get_op_config()
-input_file = join(config[GlobalModel.output_folder_web], 'ReachedTablesData.json')
+input_file = join(config[WorldLitter.output_folder_web], 'ReachedTablesData.json')
 print(input_file)
 with open(input_file) as f:
     data = json.load(f)

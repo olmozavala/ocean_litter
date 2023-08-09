@@ -1,5 +1,5 @@
 import gc
-from config.params import GlobalModel
+from config.params import WorldLitter
 from os.path import join
 from datetime import timedelta
 from utils.io_hycom import read_files
@@ -18,15 +18,15 @@ except:
 def sequential(start_date, end_date, config, name='', winds=True, diffusion=True, unbeaching=True, restart_file=""):
     # years = config[WorldLitter.years]
     years = np.arange(start_date.year, end_date.year+1)
-    base_folder = config[GlobalModel.base_folder]
-    release_loc_folder = config[GlobalModel.loc_folder]
-    output_file = join(config[GlobalModel.output_folder], name)
-    unbeach_file = config[GlobalModel.unbeach_file]
-    lat_files = config[GlobalModel.lat_files]
-    lon_files = config[GlobalModel.lon_files]
-    dt = config[GlobalModel.dt]
+    base_folder = config[WorldLitter.base_folder]
+    release_loc_folder = config[WorldLitter.loc_folder]
+    output_file = join(config[WorldLitter.output_folder], name)
+    unbeach_file = config[WorldLitter.unbeach_file]
+    lat_files = config[WorldLitter.lat_files]
+    lon_files = config[WorldLitter.lon_files]
+    dt = config[WorldLitter.dt]
     kh = 1
-    repeat_release = config[GlobalModel.repeat_release]
+    repeat_release = config[WorldLitter.repeat_release]
 
     run_time = timedelta(seconds=(end_date - start_date).total_seconds())
 
@@ -83,7 +83,7 @@ def sequential(start_date, end_date, config, name='', winds=True, diffusion=True
                            repeatdt=repeat_release)
 
 
-    out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[GlobalModel.output_freq])
+    out_parc_file = pset.ParticleFile(name=output_file, outputdt=config[WorldLitter.output_freq])
     t = time.time()
 
     print(F"Adding kernels...")

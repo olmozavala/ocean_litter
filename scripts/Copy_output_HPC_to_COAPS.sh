@@ -1,3 +1,3 @@
 #!/bin/bash
 
-scp /gpfs/home/osz09/scratch/output/NoWinds_YesDiffusion_2010_01.nc  olmozavala@146.201.212.249:/data/UN_Litter_data/output
+scp -rp /gpfs/home/osz09/scratch/output_final_2022 ozavala@146.201.220.56:/unity/f1/ozavala/DATA/WorldLitterOutput/2010-2022

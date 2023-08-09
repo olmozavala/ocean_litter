@@ -1,6 +1,7 @@
 __pycache__
 *swp
 .idea
+.vscode
 config/MainConfig.py
 *.out
 *.log

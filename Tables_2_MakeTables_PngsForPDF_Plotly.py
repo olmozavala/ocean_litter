@@ -2,7 +2,7 @@ from os.path import join
 import traceback
 import json
 from config.MainConfig import get_op_config
-from config.params import GlobalModel
+from config.params import WorldLitter
 import plotly.graph_objs as go
 import numpy as np
 import plotly.graph_objects as go
@@ -140,7 +140,7 @@ def makePDF(input_folder, output_file):
 
 if __name__ == '__main__':
 
-    # input_file = join(config[GlobalModel.output_folder_web], 'ReachedTablesData.json')
+    # input_file = join(config[WorldLitter.output_folder_web], 'ReachedTablesData.json')
     # print(F"Reading data from: {input_file}")
     # output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/"
     # Reads all the data from the specified json file

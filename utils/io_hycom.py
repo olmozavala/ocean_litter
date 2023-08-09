@@ -32,7 +32,8 @@ def read_files(base_folder, years, wind=False, start_date=0, end_date=0):
                 final_files = files
             else:
                 final_files = []
-                ds = [x.split('_')[3] for x in files]
+                # ds = [x.split('_')[3] for x in files]
+                ds = [x.split('_')[4] for x in files]
                 all_dates = [datetime(int(x[0:4]), int(x[4:6]), int(x[6:8]) ) for x in ds]
                 for i, c_date in enumerate(all_dates):
                     if end_date != 0:

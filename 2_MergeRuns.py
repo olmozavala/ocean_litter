@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, date
 from os.path import join
 from utils.several_utils import get_file_name, str2bool
-from config.params import GlobalModel
+from config.params import WorldLitter
 import sys
 import xarray as xr
 from config.MainConfig import get_op_config
@@ -29,7 +29,7 @@ def mergeFiles(config, name, start_date, end_date, execution_days, unbeaching):
         part_n = 0
         while(cur_end_date < end_date):
             input_file = get_file_name(name, start_date, cur_end_date, part_n)
-            restart_file = join(config[GlobalModel.output_folder], F"{input_file}{config[GlobalModel.output_file]}")
+            restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
             print(F"Reading restart file: {restart_file}")
             if part_n == 0:
                 merged_data = xr.open_dataset(restart_file)
@@ -61,7 +61,7 @@ def mergeFiles(config, name, start_date, end_date, execution_days, unbeaching):
         # Last call
         print("Adding last file and merging all....")
         input_file = get_file_name(name, start_date, cur_end_date, part_n)
-        restart_file = join(config[GlobalModel.output_folder], F"{input_file}{config[GlobalModel.output_file]}")
+        restart_file = join(config[WorldLitter.output_folder], F"{input_file}{config[WorldLitter.output_file]}")
         temp_data = xr.open_dataset(restart_file)
         # The first location is already saved on the previous file
         timevar = xr.concat([timevar, temp_data['time'][:,1:]], dim='obs')
@@ -98,7 +98,7 @@ def mergeFiles(config, name, start_date, end_date, execution_days, unbeaching):
             )
         ds.attrs = temp_data.attrs
 
-        output_file = join(config[GlobalModel.output_folder], F"{name}{config[GlobalModel.output_file]}")
+        output_file = join(config[WorldLitter.output_folder], F"{name}{config[WorldLitter.output_file]}")
         ds.to_netcdf(output_file)
 
         print("REAL DONE DONE DONE!")

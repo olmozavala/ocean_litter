@@ -6,7 +6,7 @@ import numpy as np
 import functools
 from os.path import join
 from config.MainConfig import get_preproc_config
-from config.params import GlobalModel, Preproc
+from config.params import WorldLitter, Preproc
 import matplotlib.pyplot as plt
 
 # REVISAR ESTOS SON IGUALES O HACEN LO MISMO
@@ -17,11 +17,11 @@ shapely.speedups.enable()
 config = get_preproc_config()
 
 input_folder = config[Preproc.shapes_folder]
-output_file = config[GlobalModel.countries_file]
+output_file = config[WorldLitter.countries_file]
 file_countries = 'ne_50m_admin_0_countries.shp'  # File with the countries polygons
-release_loc_folder = config[GlobalModel.loc_folder]
-lat_files = config[GlobalModel.lat_files]
-lon_files = config[GlobalModel.lon_files]
+release_loc_folder = config[WorldLitter.loc_folder]
+lat_files = config[WorldLitter.lat_files]
+lon_files = config[WorldLitter.lon_files]
 
 buffer_size = .3  # in degrees
 

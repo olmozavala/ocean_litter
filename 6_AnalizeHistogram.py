@@ -5,7 +5,7 @@ import numpy as np
 import functools
 import matplotlib.pyplot as plt
 from config.MainConfig import get_op_config
-from config.params import GlobalModel
+from config.params import WorldLitter
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import multiprocessing as mp

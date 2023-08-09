@@ -14,7 +14,7 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 
 from config.MainConfig import get_op_config
-from config.params import GlobalModel
+from config.params import WorldLitter
 from multiprocessing import Pool
 import geopandas
 import matplotlib.pyplot as plt
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     config = get_op_config()
 
     # Read geojson
-    web_folder = config[GlobalModel.output_folder_web]
+    web_folder = config[WorldLitter.output_folder_web]
     geojson_file = join(web_folder, "countries.json")
     stats_file = join(web_folder, "ReachedTablesData.json")
     geo_data = geopandas.read_file(geojson_file)
@@ -218,13 +218,13 @@ if __name__ == "__main__":
     ##
 
 
-    input_folder = config[GlobalModel.output_folder]
-    input_file = config[GlobalModel.output_file]
+    input_folder = config[WorldLitter.output_folder]
+    input_file = config[WorldLitter.output_file]
     file_name = join(input_folder, input_file)
 
-    lat_files = config[GlobalModel.lat_files]
-    lon_files = config[GlobalModel.lon_files]
-    release_loc_folder = config[GlobalModel.loc_folder]
+    lat_files = config[WorldLitter.lat_files]
+    lon_files = config[WorldLitter.lon_files]
+    release_loc_folder = config[WorldLitter.loc_folder]
     lats = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lat_files])
     lons = functools.reduce(lambda a, b: np.concatenate((a, b), axis=0), [np.genfromtxt(join(release_loc_folder, x), delimiter='') for x in lon_files])
 

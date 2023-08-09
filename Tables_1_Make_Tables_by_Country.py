@@ -6,11 +6,11 @@ from enum import Enum
 import json
 from utils.several_utils import replace_names
 from config.MainConfig import get_op_config
-from config.params import GlobalModel
+from config.params import WorldLitter
 import numpy as np
 from shapely.geometry import Polygon, Point, MultiPoint
 from config.MainConfig import get_preproc_config
-from config.params import GlobalModel, Preproc
+from config.params import WorldLitter, Preproc
 import shapely.speedups
 import matplotlib.pyplot as plt
 import collections
@@ -315,8 +315,8 @@ if __name__ == "__main__":
     # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
     config = get_op_config()
 
-    # input_folder= config[GlobalModel.stats_folder]
-    # output_folder = config[GlobalModel.output_folder]
+    # input_folder= config[WorldLitter.stats_folder]
+    # output_folder = config[WorldLitter.output_folder]
     # makeJsonAndCsvFiles(input_folder, output_folder)
     # ----------------- Multiple years ---------------
     years = range(2017,2022)

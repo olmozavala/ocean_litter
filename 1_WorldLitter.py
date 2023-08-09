@@ -1,7 +1,7 @@
 from parcels.scripts import *
 from datetime import timedelta, datetime
 from os.path import join
-from config.params import GlobalModel
+from config.params import WorldLitter
 from config.MainConfig import get_op_config
 import sys
 import os
@@ -45,7 +45,7 @@ def runWithRestart(execution_days, config, start_date, end_date, winds, diffusio
         start_date = cur_end_date # We need to add one or we will repeat a day
         cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
         # Define the restart file to use (previous output file)
-        restart_file = join(config[GlobalModel.output_folder], F"{get_file_name(name, prev_start_date, prev_end_date, part_n)}{config[GlobalModel.output_file]}")
+        restart_file = join(config[WorldLitter.output_folder], F"{get_file_name(name, prev_start_date, prev_end_date, part_n)}{config[WorldLitter.output_file]}")
 
 
         print(F" ================================================================================= ")
@@ -89,6 +89,7 @@ if __name__ == "__main__":
                 print(F"Running from restart ({execution_days})!!!!!  {restart_file} ")
                 runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name, restart_file=restart_file)
             else:
+                print(f"WARNING Path doesn't exist, running without restart: {restart_file}")
                 print("Running with restart. This is the first time step (without restart)!!!!!")
                 runWithRestart(execution_days, config, start_date, end_date, winds, diffusion, unbeaching, name)
         else:

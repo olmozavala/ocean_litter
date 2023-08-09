@@ -20,6 +20,6 @@ cmd="rm merge_20*"
 echo $cmd
 `$cmd`
 
-cmd="rm Merge_m*"
+cmd="rm MergeMerged*"
 echo $cmd
 `$cmd`
