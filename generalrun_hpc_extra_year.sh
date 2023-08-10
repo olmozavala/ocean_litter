@@ -4,11 +4,13 @@
 #SBATCH -t 20:00:00
 #SBATCH -p coaps_q
 ##SBATCH -p genacc_q
-#SBATCH -n 1
+#SBATCH -n 32
 #SBATCH -N 1
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 #SBATCH --mail-type=END,FAIL
 ##SBATCH --mail-type=ALL
+
+## Use --mem=128G when making the merges
 
 module load intel openmpi
 module load anaconda/3.7.3

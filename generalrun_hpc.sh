@@ -15,8 +15,8 @@ module load anaconda/3.7.3
 
 start_date_str="20YEAR-MONTH-01"
 end_date_str="2023-01-01"
-output_path="/gpfs/home/osz09/scratch/output"
-run_name="TenYears_YesWinds_YesDiffusion_NoUnbeaching_20YEAR_MONTH"
+output_path="/gpfs/home/osz09/scratch/output_2022"
+run_name="UpToDec2022_YesWinds_YesDiffusion_NoUnbeaching_20YEAR_MONTH"
 inc_per_run=30
 
 t=0
@@ -42,12 +42,12 @@ do
   if [ $t -eq  0 ]
   then
     # In this case it is only running inc_per_run days normally
-    # cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False ${run_name}_${c_start_date}_${c_end_date}"
-    cmd="srun /gpfs/home/osz09/.conda/envs/parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False ${run_name}_${c_start_date}_${c_end_date}"
+    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False ${run_name}_${c_start_date}_${c_end_date}"
+    # cmd="srun /gpfs/home/osz09/.conda/envs/parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False ${run_name}_${c_start_date}_${c_end_date}"
   else
     # In this case it should start from the previous coordinates
-    # cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
-    cmd="srun /gpfs/home/osz09/.conda/envs/parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
+    cmd="srun /gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
+    # cmd="srun /gpfs/home/osz09/.conda/envs/parcels_mpi/bin/python 1_WorldLitter.py ${c_start_date}:0 ${c_end_date}:0 True True False $run_name $output_path/${run_name}_${prev_start_date}_${prev_end_date}.nc $inc_per_run"
   fi
   echo $cmd
   `$cmd > 'CurrentRun20YEAR_MONTH.log'`
