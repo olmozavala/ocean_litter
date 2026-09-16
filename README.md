@@ -1,3 +1,29 @@
+# WorldLitter
+
+WorldLitter simulates surface transport of particles released from coasts and
+rivers. It also includes trajectory exporters and a separate reporting workflow
+for externally computed country statistics.
+
+Start with the [code guide](Docs/CODE_GUIDE.md) for module responsibilities,
+configuration types and units, data formats, restart behavior, and validation.
+The [HTML project summary](Docs/Summary/index.html) provides a visual overview.
+
+For local forcing inspection, run from the repository root:
+
+```bash
+source /home/olmozavala/uv/envs/aieoas/bin/activate
+python 0_Summary_Start_Here.py --port 8060
+```
+
+Open <http://127.0.0.1:8060/> to browse mounted HYCOM files and view velocity and
+relative vorticity around the Gulf of Mexico. The environment path above is
+specific to this workstation.
+
+Before running simulations, review the guide's compatibility notes: legacy
+modules import `WorldLitter`, while `config/params.py` currently defines
+`GlobalModel`, and the simulation uses older Parcels APIs. The HPC instructions
+below describe the existing workflow and require machine-specific configuration.
+
 # RUN AT HPC
 ## Normal run (new releases)
 To run in parallel the `HPC_RUN.sh` modifies the `generalrun_hpc.sh` file and creates multiple
@@ -38,10 +64,7 @@ To make a new run you have to:
    2. End date for all the releases `end_date_str`
    2. Define the output folder and the name of your run (each name will be appended with the year and month of the release)
 
-I'm 
-
 # Folders
-
 * HPC Data
     * Currents `/gpfs/home/osz09/scratch/world_litter_data/`
 
@@ -60,6 +83,8 @@ I'm
     * Local input files at `./data` inside the project. YOU MUST COPY THEM HERE
     * Local output file **ReachedTablesData.json** at `/var/www/html/data`
     * Output file **ReachedTablesData.json** at `ozavala@ozavala.coaps.fsu.edu/var/www/virtualhosts/ozavala.coaps.fsu.edu/data`
+    * Saved tables `https://drive.google.com/drive/folders/127VsiOLAxNKy6pcMaUA6vgoSNEPkDVh2`
+
 * Web
     * Main `ozavala@ozavala.coaps.fsu.edu/var/www/virtualhosts/marinelitter.coaps.fsu.edu`
     * Dev `ozavala@ozavala.coaps.fsu.edu/var/www/virtualhosts/ozavala.coaps.fsu.edu/marine_litter_dev`
@@ -83,14 +108,14 @@ one or more oceans into each country.
 Main code to run the Ocean Parcels lagrangian code. 
 It can be executed from from a restart file or not.
 It receives the following parameters:
-* Start date --> 'YYYY-MM-DD'
-* End date --> 'YYYY-MM-DD'
+* Start date --> 'YYYY-MM-DD:HH'
+* End date --> 'YYYY-MM-DD:HH'
 * Contains winds --> Boolean "It will search for folders ending with 'c' rather than just the year"
 * Perfrom diffusion --> Boolean
 * Perfrom unbeaching--> Boolean
 * **Name** --> Name of the run
-* (optiona for restart) **Restart file** --> Name of the run
-* Dayst to run --> Number of days to run
+* (optional, supply both trailing arguments) **Restart file** --> Existing trajectory path; a missing path starts a fresh release
+* **Execution days** --> Positive number of days per restart segment
 
 
 ### 2_MergeRuns.py
@@ -118,17 +143,13 @@ larger histogram.
 ### 6_AnalizeHistogram.py
 Makes images the generated histograms.
 
-# Tables related
-Xiabiao tables are at `/home/xbxu/hycom/GLBv0.08/nations`.
-
-### Make_Tables_by_Country.py
+# Table generation
+### Tables_1_Make_Tables_by_Country.py
 This file reads all the original files and generates a `csv` and `json` files.
 
-### MakesTables_PngsForPDF_Plotly.py
+### Tables_2_MakesTables_PngsForPDF_Plotly.py
 Reads the stats data from `ReachedTablesData.json` and generates 
 `png` and `svg` files as output.
-
-
 
 # OLD need to verify where are those files
 ### 00_Combine_Currents_And_Wind.py
@@ -139,5 +160,4 @@ to be added.
 ### 01_once_countries_shp_to_geojson
 It simply converts a shape file into a geojson. It
 creates the `countries.json` file used for the vector of countries.
-
 

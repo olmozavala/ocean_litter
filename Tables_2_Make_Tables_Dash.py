@@ -2,18 +2,17 @@ from os.path import join
 import traceback
 import json
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import  dcc, html, dash_table
 import dash_bootstrap_components as dbc
-import dash_table
 import plotly.graph_objs as go
 import numpy as np
 
 
 config = get_op_config()
-input_file = join(config[WorldLitter.output_folder_web], 'ReachedTablesData.json')
+# input_file = join(config[GlobalModel.output_folder_web], 'ReachedTablesData.json')
+input_file = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/2022/ReachedTablesData.json"
 print(input_file)
 with open(input_file) as f:
     data = json.load(f)
@@ -155,8 +154,7 @@ def makeTables(data):
 tables = makeTables(data)
 app.layout = html.Div(tables)
 
-print(help(dcc.Dropdown))
-
+# print(help(dcc.Dropdown))
 if __name__ == '__main__':
     app.run_server(debug=True)
     # app.run_server(debug=False, port=8053, host='146.201.212.214') # COAPS

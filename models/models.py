@@ -1,3 +1,17 @@
+"""Build and execute one OceanParcels surface-transport segment.
+
+See Docs/CODE_GUIDE.md for the configuration contract and legacy API constraints.
+The WorldLitter enum imported here is absent from the current config/params.py;
+configuration names must be reconciled before running the simulation.
+"""
+
+from __future__ import annotations
+
+from enum import Enum
+from typing import Any, Mapping
+from datetime import datetime
+
+
 import gc
 from config.params import WorldLitter
 from os.path import join
@@ -15,8 +29,32 @@ try:
 except:
     MPI = None
 
-def sequential(start_date, end_date, config, name='', winds=True, diffusion=True, unbeaching=True, restart_file=""):
-    # years = config[WorldLitter.years]
+def sequential(
+    start_date: datetime,
+    end_date: datetime,
+    config: Mapping[Enum, Any],
+    name: str = '',
+    winds: bool = True,
+    diffusion: bool = True,
+    unbeaching: bool = True,
+    restart_file: str = '',
+) -> None:
+    """Run one segment and export trajectories under output_folder/name.
+
+    ``config`` is the heterogeneous enum-keyed mapping from get_op_config;
+    required keys and value units are listed in Docs/CODE_GUIDE.md. End must
+    follow start. Forcing years come from these dates, not the years config key.
+    ``winds`` selects precombined YEARc fields. Diffusion uses Kh=1 m²/s.
+    Release CSVs provide latitude/longitude in degrees and are read even for
+    restarts. A nonempty ``restart_file`` restores the ParticleSet instead of
+    creating particles at the release coordinates.
+
+    Kernel order is advection, optional beach testing/unbeaching, optional
+    diffusion and beach retest, then longitude wrapping. Output cadence and
+    integration step come from output_freq and dt. Files are written through
+    Parcels' legacy ParticleFile/export API; no Dataset is returned. MPI ranks
+    synchronize after export. Missing forcing raises an exception.
+    """
     years = np.arange(start_date.year, end_date.year+1)
     base_folder = config[WorldLitter.base_folder]
     release_loc_folder = config[WorldLitter.loc_folder]

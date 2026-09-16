@@ -1,15 +1,21 @@
+"""In-place movement kernels compiled by the legacy OceanParcels JIT.
+
+All kernels receive (particle, fieldset, time) and return None. Time and
+particle.dt are in seconds; particle latitude/longitude are in degrees.
+Parcels applies the configured spherical field conversions when sampling.
+Signatures intentionally remain unannotated. Function documentation uses comments
+because Parcels 2.2.0 can emit concatenated docstrings as invalid C on Python 3.10.
+See LitterParticle for beach-state meanings.
+"""
+
 from parcels import rng as random
 import math
 
 def AdvectionRK4Beached(particle, fieldset, time):
-    """
-    RK4 kernel that takes into account beached particles. It is assumed that particle.beached = 0 means
-    that the particle is at the ocean and we should do normal RK4
-    :param particle:
-    :param fieldset:
-    :param time:
-    :return:
-    """
+    # Advance only state-0 particles with four-stage Runge–Kutta advection.
+    #
+    # Sample fieldset.UV at four intermediate positions/times, update lon/lat,
+    # then mark state 1 so BeachTesting_2D can inspect the destination.
     if particle.beached == 0:
         (u1, v1) = fieldset.UV[time, particle.depth, particle.lat, particle.lon]
         lon1, lat1 = (particle.lon + u1*.5*particle.dt, particle.lat + v1*.5*particle.dt)
@@ -27,14 +33,11 @@ def AdvectionRK4Beached(particle, fieldset, time):
 
 
 def BeachTesting_2D(particle, fieldset, time):
-    """
-    Test if a particle has beached (no movement).
-    beached values: 0 at sea, 1 after RK, 2 after diffusion, 3 please unbeach, 4 final beached
-    :param particle:
-    :param fieldset:
-    :param time:
-    :return:
-    """
+    # Classify particles after advection (1) or diffusion (2).
+    #
+    # If both sampled UV components have magnitude below 1e-14, set state 3
+    # (needs unbeaching); otherwise restore state 0. This is a zero-velocity
+    # criterion, not a geometric coastline intersection test.
     if particle.beached == 1 or particle.beached == 2:
         (ubt, vbt) = fieldset.UV[time, particle.depth, particle.lat, particle.lon]
         if math.fabs(ubt) < 1e-14 and math.fabs(vbt) < 1e-14:
@@ -44,10 +47,14 @@ def BeachTesting_2D(particle, fieldset, time):
 
 
 def UnBeaching(particle, fieldset, time):
-    """ If a particle needs to be unbeached, it reads the unbeached field and moves the particle.
-    It alse """
-    days_to_delete = 10 # If this amount of days the particle stays beached, then we deleted it
-    # We let the particle as final beached (4) one time step, after that we delete it.
+    # Move state-3 particles with unBeachU/unBeachV and count attempts.
+    #
+    # The threshold is expressed as ten days of positive integration steps, but
+    # beached_count is cumulative and never reset: it does not measure continuous
+    # time ashore. After the threshold is exceeded, set state 4. Particles remain
+    # in the output; the deletion code below is disabled.
+    days_to_delete = 10  # Historical name: cumulative attempt threshold, expressed in days.
+    # Deletion remains disabled so output keeps a consistent particle count.
     # if particle.beached == 4:
     #     particle.delete()  # This is causing problems because th enumber of particles decreases
     # return
@@ -66,8 +73,10 @@ def UnBeaching(particle, fieldset, time):
 
 
 def BrownianMotion2DUnbeaching(particle, fieldset, time):
-    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
-    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
+    # Diffuse state-0 particles, then mark state 2 for beach testing.
+    #
+    # Requires Kh_zonal and Kh_meridional. Independent uniform draws on [-1, 1]
+    # are scaled to variance 2*abs(dt)*Kh in each sampled coordinate direction.
     if particle.beached == 0:
         r = 1 / 3.
         kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
@@ -78,8 +87,10 @@ def BrownianMotion2DUnbeaching(particle, fieldset, time):
 
 
 def BrownianMotion2D(particle, fieldset, time):
-    """Kernel for simple Brownian particle diffusion in zonal and meridional direction.
-    Assumes that fieldset has fields Kh_zonal and Kh_meridional"""
+    # Apply diffusion regardless of beach state using the two Kh fields.
+    #
+    # Uniform draws on [-1, 1] are scaled to variance 2*abs(dt)*Kh. This variant
+    # can run with a plain JITParticle because it does not access beach variables.
     r = 1 / 3.
     kh_meridional = fieldset.Kh_meridional[time, particle.depth, particle.lat, particle.lon]
     particle.lat += random.uniform(-1., 1.) * math.sqrt(2 * math.fabs(particle.dt) * kh_meridional / r)
@@ -88,7 +99,9 @@ def BrownianMotion2D(particle, fieldset, time):
 
 
 def periodicBC(particle, fieldset, time):
-    """ Periodic boundary conditions. TODO need to test if this is really working"""
+    # Wrap longitude once across fieldset.halo_west/halo_east.
+    #
+    # Assumes a timestep cannot move a particle by more than one domain width.
     if particle.lon < fieldset.halo_west:
         particle.lon += fieldset.halo_east - fieldset.halo_west            #if a particle falls into halo west, its lon is corrected
     elif particle.lon > fieldset.halo_east:
@@ -96,6 +109,11 @@ def periodicBC(particle, fieldset, time):
 
 
 def outOfBounds(particle, fieldset, time):
+    # Mark a particle as state 4 without deleting it or changing its position.
+    #
+    # Requires a particle with a beached variable. The legacy runner also
+    # registers this callback when using plain JITParticle; that case needs
+    # compatibility review before relying on out-of-bounds recovery.
     particle.beached = 4
 
 # def RandomWalkSphere(particle, fieldset, time):

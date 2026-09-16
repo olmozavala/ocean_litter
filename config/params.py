@@ -1,9 +1,22 @@
+"""Enum keys for heterogeneous configuration dictionaries and data columns.
+
+GlobalModel is the current name. Several legacy simulation modules still import
+WorldLitter, which is not defined here; see Docs/CODE_GUIDE.md before running.
+Enum values are identifiers, not physical quantities.
+"""
+
 from enum import Enum
 
 class Preproc(Enum):
+    """Configuration keys used when assigning release locations to GIS shapes."""
     shapes_folder = 1
 
-class WorldLitter(Enum):
+class GlobalModel(Enum):
+    """Keys for paths, filename sequences, dates, and simulation intervals.
+
+    See the configuration table in Docs/CODE_GUIDE.md for expected value types
+    and units. Keep numeric values stable because external code may store them.
+    """
     years = 1
     base_folder = 2
     loc_folder = 3
@@ -22,6 +35,7 @@ class WorldLitter(Enum):
 
 
 class DataCols(Enum):
+    """Column-name constants used by preprocessing and visualization data."""
     category = 'category'
     netcdf_file = 'file_name'
     cords_file = 'coords_file_name'

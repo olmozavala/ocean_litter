@@ -1,0 +1,35 @@
+=== Setup For spherical grid ===
+Particles are distributed along latitudes -70 to 70, longitude = 0
+5000 particles
+gridsize (100, 100) lats [-90, 90], lons [-10, 180]
+run_time = 100,000 seconds
+dt = 10000 seconds
+repeat particles = dt seconds
+V vel = 0 units/tunit
+U vel = 40 m/s
+(only RK) Expected largest position (equator) = 40*100,000 = 4,000,000 = 4,000k ~ 40 deg
+(5% diff  ) Expected largest position (equator) = 40*100,000 + ~ 2*100,000= 6,000,000 = 6,000k ~ 60 deg
+(RandomWalk) Expected largest position (equator) = Out of bounds
+
+
+=== Setup (unitless) ===
+Particles are distributed along all the vertical axis of a 100x100 grid
+5000 particles
+gridsize (100, 100)
+run_time = 5 time units
+dt = .01 time units
+repeat particles = .1 units
+V vel = 0 units/tunit
+U vel = 2 m/s
+Expected largest position = 2*5 = 10  mts
+
+Max Gulf Stream speed 9 km/h = 2.5 m/s
+
+========= Time ======
+RK + 5%mag -->   4.6 minutes
+
+--- Degree precision versus length
+1 Degree = 111.32 km Equator
+1 Degree = 102.47 km at 23 Lat
+1 Degree = 78.71  km at 45 Lat
+1 Degree = 43.496 km at 67 Lat

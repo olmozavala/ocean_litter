@@ -2,7 +2,7 @@ from os.path import join
 import traceback
 import json
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import plotly.graph_objs as go
 import numpy as np
 import plotly.graph_objects as go
@@ -119,7 +119,7 @@ def makeTables(data, output_folder):
 """
             dashPlotTable(country_name, to_data, from_data, title, output_folder),
         except Exception as e:
-            # print(F"Failed for country: {country_name}:{i}: {traceback.print_exc()}")
+            print(F"Failed for country: {country_name}:{i}: {traceback.print_exc()}")
             print(F"Failed for country: {country_name} Index:{i} e:{e}")
     return tables
 
@@ -149,23 +149,51 @@ if __name__ == '__main__':
     # makeTables(data, output_folder)
 
     # ---------------- Multiple years ---------------
-    years = range(2017,2022)
-    in_folder= "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
-    out_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/MultipleYears"
-    pdf_output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/"
+    # years = range(2022,2023)
+    # in_folder= "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
+    # out_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/MultipleYears"
+    # pdf_output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/"
 
-    for root_year in years: # I named it root_year because it create conflicts with other functions
-        global_year = root_year
-        input_file = join(in_folder, str(root_year), 'ReachedTablesData.json')
-        print(F"Reading data from: {input_file}")
-        output_folder = join(out_folder, str(root_year))
+    # for root_year in years: # I named it root_year because it create conflicts with other functions
+    #     global_year = root_year
+    #     input_file = join(in_folder, str(root_year), 'ReachedTablesData.json')
+    #     print(F"Reading data from: {input_file}")
+    #     output_folder = join(out_folder, str(root_year))
 
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+    #     if not os.path.exists(output_folder):
+    #         os.makedirs(output_folder)
+    #         os.makedirs(join(pdf_output_folder, str(root_year)))
 
-        with open(input_file) as f:
-            data = json.load(f)
+    #     with open(input_file) as f:
+    #         data = json.load(f)
 
-        makeTables(data, output_folder)
-        output_file = join(pdf_output_folder, str(root_year), F"ReachedTablesData.pdf")
-        makePDF(output_folder, output_file)
+    #     # makeTables(data, output_folder)
+    #     output_file = join(pdf_output_folder, str(root_year), F"ReachedTablesData.pdf")
+    #     makePDF(output_folder, output_file)
+
+
+    # ---------------- Multiple years New Scenarios---------------
+    years = range(2017,2023)
+    in_folder= "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/New_Scenarios/"
+    out_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/New_Scenarios/TableImages/"
+    pdf_output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/New_Scenarios/"
+
+    for letter in ['C','D','I']:
+        for root_year in years: # I named it root_year because it create conflicts with other functions
+            global_year = root_year
+            input_file = join(in_folder, f'{letter}{root_year}_12', 'ReachedTablesData.json')
+            print(F"Reading data from: {input_file}")
+            output_folder = join(out_folder, f'{letter}{root_year}_12')
+            final_pdf_output_folder = join(pdf_output_folder, f'{letter}{root_year}_12')
+
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+            if not os.path.exists(final_pdf_output_folder):
+                os.makedirs(final_pdf_output_folder)
+
+            with open(input_file) as f:
+                data = json.load(f)
+
+            makeTables(data, output_folder)
+            output_file = join(final_pdf_output_folder, F"ReachedTablesData.pdf")
+            makePDF(output_folder, output_file)

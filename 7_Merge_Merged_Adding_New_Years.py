@@ -1,18 +1,36 @@
+"""Append newer trajectory observations to previously merged monthly releases.
+
+The CLI takes YEAR MONTH and uses the paths/prefixes in the main block. Unlike
+2_MergeRuns.py, this script retains every observation from both input files.
+"""
+
+from __future__ import annotations
+
+from os import PathLike
+from typing import Sequence, Union
+
+
 from os.path import join
 import xarray as xr
 import sys
 import os
 
-def mergeFiles(prefix_prev, prefix_new, input_folder_1, input_folder_2, output_folder, years, months):
-    """
-    This code merges previous merged runs with new merged runs
-    :param input_folder_1:
-    :param input_folder_2:
-    :param output_folder:
-    :param years:
-    :param months:
+def mergeFiles(
+    prefix_prev: str,
+    prefix_new: str,
+    input_folder_1: Union[str, PathLike[str]],
+    input_folder_2: Union[str, PathLike[str]],
+    output_folder: Union[str, PathLike[str]],
+    years: Sequence[int],
+    months: Sequence[int],
+) -> None:
+    """Concatenate matching PREFIX_YEAR_MM.nc files along ``obs``.
 
-    :return:
+    Each pair must describe the same release and compatible trajectory order.
+    The output uses prefix_new. Boundary timestamps are not deduplicated, so
+    inspect input overlap before calling. Existing destinations are deleted
+    before reading inputs; use a distinct, already-created output directory.
+    Failures are printed per year/month and processing continues.
     """
 
     assert output_folder != input_folder_1

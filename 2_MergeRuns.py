@@ -1,3 +1,17 @@
+"""Merge restart segments along the trajectory observation dimension.
+
+Usage: python 2_MergeRuns.py START END UNBEACHING NAME EXECUTION_DAYS
+Dates use YYYY-MM-DD:HH; names and segment lengths must match 1_WorldLitter.py.
+This legacy script requires the configuration enum compatibility described in
+Docs/CODE_GUIDE.md.
+"""
+
+from __future__ import annotations
+
+from enum import Enum
+from typing import Any, Mapping
+
+
 from datetime import timedelta, datetime, date
 from os.path import join
 from utils.several_utils import get_file_name, str2bool
@@ -10,14 +24,26 @@ try:
 except:
     MPI = None
 
-def mergeFiles(config, name, start_date, end_date, execution_days, unbeaching):
-    """
-    This code merges previous runs. It takes into account the 'extra' date that is repeated for each splitted file
-    :param config:
-    :param start_date:
-    :param end_date:
-    :param execution_days:
-    :return:
+def mergeFiles(
+    config: Mapping[Enum, Any],
+    name: str,
+    start_date: datetime,
+    end_date: datetime,
+    execution_days: int,
+    unbeaching: bool,
+) -> None:
+    """Write NAME + output_file by joining at least two restart segments.
+
+    Inputs live in config's output_folder and follow get_file_name(). Each must
+    contain time, trajectory, lat, lon, and z with (traj, obs) dimensions and
+    matching particle order. ``unbeaching=True`` additionally requires beached
+    and beached_count. Drop observation zero of every segment after the first
+    because adjacent runs repeat their boundary timestamp. Attributes come
+    from the last segment. Only MPI rank zero writes the merged NetCDF.
+
+    Preconditions: execution_days > 0 and the interval spans at least two
+    segments. The existing implementation does not initialize its accumulation
+    arrays for a single-segment interval. The destination may be overwritten.
     """
     exec_next = True
     if MPI:
@@ -53,7 +79,7 @@ def mergeFiles(config, name, start_date, end_date, execution_days, unbeaching):
                     beached = xr.concat([beached, temp_data['beached'][:,1:]], dim='obs')
                     beached_count = xr.concat([beached_count, temp_data['beached_count'][:,1:]], dim='obs')
 
-            start_date = cur_end_date # We need to add one or we will repeat a day
+            start_date = cur_end_date  # The next segment repeats this boundary observation.
             cur_end_date = min(start_date + timedelta(days=execution_days), end_date)
             part_n += 1
             print("Done adding this file!")

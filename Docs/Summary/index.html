@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A source-based guide to the WorldLitter code, datasets, paths, simulation workflow, and outputs.">
+<title>WorldLitter · Project guide</title>
+<style>
+:root{--ink:#162f40;--muted:#526b79;--paper:#f3f6f7;--card:#fff;--line:#d8e3e7;--sea:#007d80;--deep:#103747;--tint:#e8f5f2;--amber:#89531c}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:25px}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:#006f79;text-underline-offset:3px}a:hover{color:#a45216}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #c77c24;outline-offset:3px}code{font: .86em/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#edf3f5;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}pre{padding:22px;background:#123644;color:#eff8fa;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}pre code{background:none;color:inherit;padding:0}.layout{max-width:1450px;margin:auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:46px;padding:34px 40px 70px}aside{position:sticky;top:28px;align-self:start}.brand{font-size:20px;font-weight:800;letter-spacing:-.6px}.brand small{display:block;font-size:11px;letter-spacing:2px;color:var(--sea);margin-top:3px}.nav{display:grid;gap:3px;margin:28px 0}.nav a{text-decoration:none;color:var(--muted);font-size:14px;padding:8px 12px;border-radius:6px}.nav a:hover{background:#e2eeee;color:var(--sea)}.aside-note{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:17px}main{min-width:0}header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:0 0 18px;border-bottom:1px solid var(--line)}h1{font-size:26px;line-height:1.25;letter-spacing:-.6px;margin:0 0 8px}.meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}.actions{display:flex;align-items:center}.actions button{font:inherit;font-size:13px;padding:8px 14px;border:1px solid #9fb8c2;border-radius:6px;background:white;color:var(--ink);cursor:pointer}.actions button:hover{background:var(--tint)}section{margin-top:44px}h2{font-size:26px;letter-spacing:-.6px;line-height:1.25;margin:0 0 17px}h2 .num{font-size:12px;letter-spacing:1px;color:var(--sea);display:block;margin-bottom:8px}h3{font-size:18px;line-height:1.35;margin:24px 0 9px}p{margin:0 0 14px}.lead{font-size:18px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:22px 0}.card{border:1px solid var(--line);padding:21px;border-radius:12px;background:var(--card)}.card strong{display:block;font-size:23px;color:var(--sea);line-height:1.2;margin-bottom:9px}.card p{font-size:14px;margin:0;color:var(--muted)}.callout{border-left:4px solid var(--sea);padding:18px 21px;background:var(--tint);border-radius:0 9px 9px 0;font-size:14px;margin:20px 0}.callout p:last-child{margin-bottom:0}.amber{background:#fff4e6;border-color:#bd7b2e}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0}.step{background:white;border:1px solid var(--line);border-top:3px solid var(--sea);border-radius:8px;padding:18px 16px}.step b{font-size:11px;color:var(--sea);text-transform:uppercase;letter-spacing:1px}.step strong{display:block;line-height:1.4;margin:7px 0}.step p{font-size:13px;color:var(--muted);margin:0}.branch{display:grid;grid-template-columns:1fr 1fr;gap:16px}.branch .card strong{font-size:17px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:white;margin:16px 0}table{border-collapse:collapse;width:100%;font-size:14px;text-align:left}th{background:#e8eff2;font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:#3b596a;padding:13px 16px}td{border-top:1px solid var(--line);vertical-align:top;padding:15px 16px}td:first-child{width:28%}td p{margin:6px 0 0}td small{color:var(--muted)}.badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 7px;border-radius:4px;background:var(--tint);color:#08605b;white-space:nowrap;display:inline-block;margin:5px 0}.badge.external{background:#edf0f8;color:#505c86}.badge.missing{background:#fff0de;color:var(--amber)}.source{font-size:12px;color:var(--muted);margin-top:12px}.search{display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap}.search input{width:min(100%,410px);padding:11px 14px;font:inherit;font-size:14px;border:1px solid #9fb8c2;border-radius:7px;background:white}.search span{font-size:12px;color:var(--muted)}details{border:1px solid var(--line);border-radius:9px;background:white;margin:12px 0;padding:16px 20px}summary{font-weight:650;cursor:pointer}details p{font-size:14px;margin:12px 0 0}ol{padding-left:23px}li{padding:4px 0 8px}footer{border-top:1px solid var(--line);margin-top:40px;padding-top:20px;font-size:12px;color:var(--muted)}[hidden]{display:none!important}
+@media(max-width:1050px){.layout{grid-template-columns:180px minmax(0,1fr);gap:25px;padding:25px}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:1fr}.card strong{font-size:20px}}
+@media(max-width:720px){.layout{display:block;padding:16px}aside{position:static}.brand small,.aside-note{display:none}.nav{display:flex;overflow:auto;gap:4px;margin:14px 0 20px;padding-bottom:4px}.nav a{white-space:nowrap;padding:6px 9px}header{gap:12px}h1{font-size:24px}.branch{grid-template-columns:1fr}section{margin-top:34px}th,td{padding:12px}table{min-width:540px}.flow{gap:9px}.step{padding:14px 12px}}
+@media print{body{background:white;font-size:10pt}.layout{display:block;padding:0;max-width:none}aside,.actions,.search{display:none}header{background:white;color:var(--ink);padding:0;border-radius:0}header:after{display:none}header p,.eyebrow,.meta{color:var(--muted)}section{margin-top:24px}h2{font-size:19pt}h2,h3{break-after:avoid}.card,.step,tr,details{break-inside:avoid}.table-wrap{overflow:visible}table{min-width:0;font-size:9pt}a{color:inherit}pre{background:#f0f3f4;color:var(--ink)}.source{font-size:8pt}}
+.tab-panel>section:first-child{margin-top:30px}
+.nav a[aria-selected="true"]{background:var(--tint);color:var(--sea);font-weight:650;box-shadow:inset 3px 0 var(--sea)}
+@media(max-width:720px){.nav a[aria-selected="true"]{box-shadow:inset 0 -3px var(--sea)}}
+@media print{.tab-panel[hidden]{display:block!important}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside aria-label="Project guide navigation">
+<div class="brand">WorldLitter<small>CODE &amp; DATA GUIDE</small></div>
+<nav class="nav" aria-label="Guide sections">
+<a id="tab-overview" href="#overview">01 · Overview</a>
+<a id="tab-flow" href="#flow">02 · Processing flow</a>
+<a id="tab-code" href="#code">03 · Code map</a>
+<a id="tab-datasets" href="#datasets">04 · Datasets</a>
+<a id="tab-paths" href="#paths">05 · Path reference</a>
+<a id="tab-model" href="#model">06 · Model &amp; configuration</a>
+<a id="tab-running" href="#running">07 · Running &amp; restarting</a>
+<a id="tab-outputs" href="#outputs">08 · Output formats</a>
+<a id="tab-readiness" href="#readiness">09 · Reproduction notes</a>
+<a id="tab-sources" href="#sources">10 · Sources &amp; scope</a>
+</nav>
+<p class="aside-note">A local, offline guide.<br>Based on the working tree reviewed on September 15, 2026.<br><br>Paths in tables are literal values found in code or documentation.</p>
+</aside>
+<main>
+<header>
+<div><h1>Project summary</h1>
+<div class="meta"><span>Reviewed 15 September 2026</span><span>Base commit 8195cba + local changes</span></div></div>
+<div class="actions"><button id="print" type="button">Print / save PDF</button></div>
+</header>
+<div id="panel-overview" class="tab-panel">
+<section id="overview">
+<h2><span class="num">01 / PURPOSE</span>What this project does</h2>
+<p class="lead">WorldLitter models the movement of particles released from coastal and river sources using ocean surface velocity fields. Its scripts turn simulated trajectories into maps, spatial histograms, and compact files for a marine-litter web visualizer.</p>
+<p>A separate reporting workflow reads precomputed country-to-country litter statistics and formats them as JSON, CSV, figures, dashboards, and PDF tables. Those statistics are imported from an external workflow; the inspected table scripts do not derive them directly from this repository’s trajectory files.</p>
+<div class="cards"><div class="card"><strong>Surface transport</strong><p>Advection, optional random diffusion, and optional movement away from stranded locations.</p></div><div class="card"><strong>Monthly releases</strong><p>Separate release cohorts, run through a common end date using restartable segments.</p></div><div class="card"><strong>Two output families</strong><p>Particle trajectories and visualizations; country statistics and reports.</p></div></div>
+<div class="callout amber"><strong>Current checkout:</strong> useful code and local datasets are present, but execution needs configuration reconciliation and external inputs. Most simulation modules import <code>WorldLitter</code>; <code>config/params.py</code> currently defines <code>GlobalModel</code> instead. This summary documents the existing state; simulation execution was not validated.</div>
+</section>
+</div>
+<div id="panel-flow" class="tab-panel">
+<section id="flow">
+<h2><span class="num">02 / DATA FLOW</span>How the pieces connect</h2>
+<div class="flow" aria-label="Simulation workflow in four ordered stages">
+<div class="step"><b>01 → Prepare inputs</b><strong>Coordinates + velocity fields</strong><p>Coast/river CSVs supply particle positions. HYCOM NetCDF files supply surface motion. GIS polygons associate particles with countries and oceans.</p></div>
+<div class="step"><b>02 → Simulate</b><strong>OceanParcels integration</strong><p><code>1_WorldLitter.py</code> calls <code>models.sequential()</code>, selects kernels, and writes trajectory segments.</p></div>
+<div class="step"><b>03 → Assemble</b><strong>Restart and merge</strong><p><code>2_MergeRuns.py</code> joins segments within a release. Script 7 appends an additional period to an existing merged release.</p></div>
+<div class="step"><b>04 → Export</b><strong>Maps, histograms, web data</strong><p>Scripts 3–6 create images, binary coordinates, headers, and gridded accumulated-location products.</p></div>
+</div>
+<div class="branch"><div class="card"><strong>Country metadata branch</strong><p>Release CSVs + country/ocean polygons → <code>0_1_Combine_Locations_with_Countries_and_Oceans.py</code> → country-to-particle index CSV → country-grouped trajectory exports. Particle order must stay consistent between the release files, simulation, and index CSV.</p></div><div class="card"><strong>Country statistics branch</strong><p>External <code>sum_from_*.txt</code> / <code>sum_to_*.txt</code> → <code>Tables_1_Make_Tables_by_Country.py</code> → <code>ReachedTablesData.json/.csv</code> → Plotly images, Dash tables, and PDF reports.</p></div></div>
+<p class="source">Sources: <a href="../../1_WorldLitter.py">simulation entry point</a>, <a href="../../models/models.py">model assembly</a>, <a href="../../Tables_1_Make_Tables_by_Country.py">statistics parser</a>.</p>
+</section>
+</div>
+<div id="panel-code" class="tab-panel">
+<section id="code">
+<h2><span class="num">03 / REPOSITORY MAP</span>Where to start reading the code</h2>
+<div class="table-wrap"><table><thead><tr><th>File or directory</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td><a href="../../1_WorldLitter.py"><code>1_WorldLitter.py</code></a></td><td>CLI dates and process flags; optional restart handling and batched calls to the model.</td></tr>
+<tr><td><a href="../../models/models.py"><code>models/models.py</code></a></td><td>Reads inputs, builds a Parcels <code>FieldSet</code> and <code>ParticleSet</code>, assembles kernels, executes, and exports trajectories.</td></tr>
+<tr><td><a href="../../mykernels/wl_kernels.py"><code>mykernels/</code></a></td><td>Custom advection, diffusion, beach tests, unbeaching, longitude wrapping, and particle state variables.</td></tr>
+<tr><td><a href="../../utils/io_hycom.py"><code>utils/</code></a></td><td>Velocity-file selection, diffusion/unbeaching fields, country indices, boolean parsing, and run filenames.</td></tr>
+<tr><td><a href="../../config/params.py"><code>config/</code></a></td><td>Configuration keys, local/HPC examples, and region groupings. The active <code>MainConfig.py</code> exists locally and is Git-ignored.</td></tr>
+<tr><td><a href="../../0_1_Combine_Locations_with_Countries_and_Oceans.py"><code>0_1_Combine_…</code></a></td><td>Buffers country polygons by 0.3° and intersects release points and ocean polygons; exports country metadata.</td></tr>
+<tr><td><a href="../../2_MergeRuns.py"><code>2_MergeRuns.py</code></a><br><a href="../../7_Merge_Merged_Adding_New_Years.py"><code>7_Merge_…</code></a></td><td>Combines restart segments and extends previously merged runs. Script 2 drops the first repeated observation of later segments; script 7 concatenates periods directly.</td></tr>
+<tr><td><a href="../../3_Show_Output.py"><code>3_Show_Output.py</code></a></td><td>Several trajectory plotting modes, including accumulated and per-time-step maps, with multiprocessing and hard-coded examples.</td></tr>
+<tr><td><a href="../../4_OceanParcels_to_JSON_and_ZIP_V2.py"><code>4_OceanParcels_…</code></a></td><td>Country-grouped, subsampled trajectory export as binary arrays and text headers; the filename retains older JSON/ZIP terminology.</td></tr>
+<tr><td><a href="../../5_MakeHistogramNcWMS.py"><code>5_MakeHistogramNcWMS.py</code></a><br><a href="../../6_AnalizeHistogram.py"><code>6_AnalizeHistogram.py</code></a></td><td>Accumulated-location histograms, plots, NetCDF and TIFF export; script 6 is a small inspection example.</td></tr>
+<tr><td><a href="../../Tables_1_Make_Tables_by_Country.py"><code>Tables_1_*</code></a><br><a href="../../Tables_2_MakeTables_PngsForPDF_Plotly.py"><code>Tables_2_*</code></a></td><td>Parse country statistics; generate multi-year charts, Plotly tables and Dash views. <code>pngTopdf.sh</code> combines rendered tables into a PDF.</td></tr>
+<tr><td><a href="../../HPC_RUN.sh"><code>HPC_RUN.sh</code></a><br><code>generalrun_*.sh</code>, <code>scripts/</code></td><td>Batch submission, segmented simulations, cluster/local variants, data copying, and export helpers.</td></tr>
+<tr><td><code>additional_programs/</code></td><td>Combine currents and winds; create an unbeaching field; inspect forcing fields; convert country shapefiles into GeoJSON.</td></tr>
+<tr><td><a href="../../0_UpdateToZarr.py"><code>0_UpdateToZarr.py</code></a></td><td>Optional conversion of merged NetCDF files to consolidated Zarr stores.</td></tr>
+<tr><td><code>PerformanceTests/</code>, <code>Docs/</code>, <code>ScienceOnSphere/</code>, <code>OLD/</code></td><td>Performance experiments, equation/test notes and images, a display-oriented plotting script, and legacy code. These are supporting material, not a verified automated test suite.</td></tr>
+</tbody></table></div>
+</section>
+</div>
+<div id="panel-datasets" class="tab-panel">
+<section id="datasets">
+<h2><span class="num">04 / INPUTS</span>Datasets and their roles</h2>
+<div class="callout"><strong>COAPS storage:</strong> paths containing <code>nexsan</code> are mounted from COAPS, and paths on <code>mars.coaps.fsu.edu</code> also belong to COAPS. Project outputs are stored on <code>mars.coaps.fsu.edu</code>. See <a href="#paths">Path reference</a> for the configured directories.</div>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Contents and use</th><th>Availability / provenance</th></tr></thead><tbody>
+<tr><td>Reduced release locations</td><td><code>data/release_locations_reduced/</code>: <code>coasts_all_{x,y,w}.csv</code> and <code>rivers_all_{x,y,w}.csv</code>. Longitude/latitude pairs contain 28,713 coastal and 3,587 river rows: 32,300 positions per combined release.</td><td><span class="badge">Local files</span><p>The simulation reads x/y coordinates; it does not load the accompanying w files. Source publication and exact dataset version are not established here.</p></td></tr>
+<tr><td>Full release locations</td><td><code>data/release_locations_all/</code>: 268,452 coastal and 13,678 river coordinate rows, totaling 282,130 combined positions; also category/subset files.</td><td><span class="badge">Local files</span><p>Alternative input set. Counts come from coordinate-file line counts; they are not a record of a completed simulation.</p></td></tr>
+<tr><td>Combined release inventory</td><td><code>data/initial-locations-global.csv</code>: longitude, latitude, weight [ton], source [0:land, 1:river], country, country ID, distance to coast [km].</td><td><span class="badge">Local file</span><p>A richer inventory. The inspected simulation entry point does not read this file directly.</p></td></tr>
+<tr><td>HYCOM surface forcing</td><td>NetCDF variables <code>surf_u</code>, <code>surf_v</code> on <code>latitude</code>, <code>longitude</code>, <code>time</code>. The reader selects <code>&lt;base&gt;/YYYY/</code> or combined current/wind <code>&lt;base&gt;/YYYYc/</code>.</td><td><span class="badge external">External input</span><p>Paths name HYCOM GLBv0.08. Exact forcing version, coverage, and completeness need checking on the source storage.</p></td></tr>
+<tr><td>Country and ocean geometry</td><td><code>data/world_boundaries/</code> contains Natural Earth <code>ne_50m_admin_0_countries</code> and other country layers. <code>data/oceans_oz/</code> contains ocean polygons.</td><td><span class="badge">Local files</span><p>The preprocessing script still points to older external GIS paths. Shapefile sidecar files are required with the .shp.</p></td></tr>
+<tr><td>Country ↔ particle indices</td><td>Generated CSV fields include <code>total</code>, <code>oceans</code>, <code>continent</code>, <code>min</code>, <code>max</code>, <code>idx_country</code>. Export code uses explicit indices.</td><td><span class="badge missing">Configured file absent</span><p>The configured <code>Particles_by_Country_small.csv</code> is external. A local river-only large variant exists but lacks <code>continent</code>, so it is not a direct replacement.</p></td></tr>
+<tr><td>Unbeaching field</td><td><code>unbeaching100000ms.nc</code>, containing <code>unBeachU</code> and <code>unBeachV</code>. Moves particles when both local velocity components are nearly zero.</td><td><span class="badge external">Optional external input</span><p>Required only for the unbeaching option. A generation script exists under <code>additional_programs/</code>.</p></td></tr>
+<tr><td>Country transport statistics</td><td><code>data/reached_data_tables/</code>: <code>sum_from_*.txt</code>, <code>sum_to_*.txt</code>, <code>MultipleYears/</code>, <code>New_Scenarios/</code>, and derived <code>Outputs/</code>.</td><td><span class="badge">Local files</span><p>README identifies source storage on <code>enterprise</code>. Some older headers report ton/yr; preserve units and period from each input scenario.</p></td></tr>
+<tr><td>Saved products and extras</td><td><code>data/World_Litter_Countries_Stats/ReachedTablesData.json</code> and <code>.csv</code>; <code>data/Extras/mpw_beached_2010_2019.nc</code>, <code>mpw_ocean_2010_2019.nc</code>, and particle shapefiles.</td><td><span class="badge">Local files</span><p>Outputs/reference assets. Their exact generating run and mass-model provenance were not traced during this review.</p></td></tr>
+</tbody></table></div>
+</section>
+</div>
+<div id="panel-paths" class="tab-panel">
+<section id="paths">
+<h2><span class="num">05 / STORAGE</span>Path reference</h2>
+<p>Repository-relative paths below resolve from the checkout root. External paths are historical/configured locations; their presence on a remote host has not been verified. The active local configuration and the HPC templates describe different environments.</p>
+<p>The project owner confirmed that all paths containing <code>nexsan</code> are COAPS mounts, and all paths on <code>mars.coaps.fsu.edu</code> are COAPS storage. The output host is <code>mars.coaps.fsu.edu</code>; the directory paths below retain their literal values from the code and README.</p>
+<div class="search"><label for="path-search">Find a path</label><input id="path-search" type="search" placeholder="Try: HPC, forcing, statistics, output…"><span id="path-count" role="status" aria-live="polite"></span></div>
+<div class="table-wrap"><table id="path-table"><thead><tr><th>Purpose / source</th><th>Literal path</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Current repository</td><td><code>/home/olmozavala/Dropbox/MyProjects/OCEAN_Litter/Proj_WorldLitter/Github_ocean_litter</code></td><td>Current checkout; this guide is <code>Docs/Summary/index.html</code>.</td></tr>
+<tr><td>Active forcing<br><small>MainConfig.py</small></td><td><code>/nexsan/people/xbxu/hycom/GLBv0.08/</code></td><td>Configured HYCOM base on a COAPS mount; not present on the reviewed local host.</td></tr>
+<tr><td>Local example forcing</td><td><code>/data/UN_Litter_data/HYCOM</code></td><td>Example base for year folders; not present on the reviewed host.</td></tr>
+<tr><td>Active releases</td><td><code>/data/UN_Litter_data/HYCOM/data/release_locations</code></td><td>Configured external release folder. Local candidates are <code>data/release_locations_reduced/</code> and <code>data/release_locations_all/</code>.</td></tr>
+<tr><td>Active trajectory output</td><td><code>/data/COAPS_Net/work/ozavala/WorldLitterOutput/YesWinds_YesDiffusion_NoUnbeaching</code></td><td>Configured output folder; not present on the reviewed host.</td></tr>
+<tr><td>Country indices / unbeaching</td><td><code>/data/UN_Litter_data/Particles_by_Country_small.csv</code><br><code>/data/UN_Litter_data/HYCOM/unbeaching100000ms.nc</code></td><td>Configured metadata and optional field; parent data root absent locally.</td></tr>
+<tr><td>GIS preprocessing</td><td><code>/home/olmozavala/Dropbox/TestData/GIS/Shapefiles/World/high_res/</code><br><code>/home/olmozavala/Dropbox/TestData/GIS/Shapefiles/World/oceans_oz/oceans_oz.shp</code></td><td>Old geometry locations used by configuration/preprocessing; repository copies are listed above.</td></tr>
+<tr><td>HPC forcing</td><td><code>/gpfs/home/osz09/scratch</code><br><code>/gpfs/home/osz09/scratch/world_litter_data/</code></td><td>The first is the base in <code>MainConfigHPC.py</code>; the second is the README’s currents location. Reconcile the year-folder layout.</td></tr>
+<tr><td>HPC releases</td><td><code>/gpfs/home/osz09/ocean_litter/data/release_locations_reduced/</code></td><td>Path in the HPC config template.</td></tr>
+<tr><td>HPC output and extension</td><td><code>/gpfs/home/osz09/scratch/output</code><br><code>/gpfs/home/osz09/scratch/output_2022</code><br><code>/gpfs/home/osz09/scratch/output_final</code><br><code>/gpfs/home/osz09/scratch/output_final_2022</code></td><td>Template default; batch output/new-period input; previous merged input; combined output. The template and batch folder values differ.</td></tr>
+<tr><td>HPC Zarr / web staging</td><td><code>/gpfs/home/osz09/scratch/output_final_zarr</code><br><code>/gpfs/home/osz09/scratch/output_web_folder</code></td><td>Zarr conversion destination and configured web export staging.</td></tr>
+<tr><td>COAPS storage</td><td><code>/Net/work/ozavala/WorldLitterOutput</code></td><td>Remote output location documented in README; absent on this host.</td></tr>
+<tr><td>COAPS output host<br><small>Project owner confirmation</small></td><td><code>mars.coaps.fsu.edu</code></td><td>Host where project outputs are stored. Paths on this host belong to COAPS; remote directory contents were not inspected for this guide.</td></tr>
+<tr><td>Statistics upstream</td><td><code>enterprise:/home/xbxu/hycom/GLBv0.08/nations</code></td><td>README/source comments name SSH user <code>ozavala</code>. Access and remote contents were not checked.</td></tr>
+<tr><td>Statistics inputs and products</td><td><code>data/reached_data_tables/New_Scenarios/</code><br><code>data/reached_data_tables/Outputs/New_Scenarios/</code><br><code>data/World_Litter_Countries_Stats/</code></td><td>Local scenario inputs and saved products. Active <code>stats_folder</code> points instead to absent <code>data/reached_data_tables/decay_jan_2021</code>.</td></tr>
+<tr><td>Legacy repository prefix</td><td><code>/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/</code></td><td>Still hard-coded in table scripts, GIS conversion, and active web-output configuration. Replace with the current checkout location when restoring execution.</td></tr>
+<tr><td>Web publication locations</td><td><code>/var/www/html/data</code><br><code>ozavala.coaps.fsu.edu:/var/www/virtualhosts/ozavala.coaps.fsu.edu/data</code><br><code>ozavala.coaps.fsu.edu:/var/www/virtualhosts/marinelitter.coaps.fsu.edu</code><br><code>ozavala.coaps.fsu.edu:/var/www/virtualhosts/ozavala.coaps.fsu.edu/marine_litter_dev</code></td><td>README’s local data, remote data, main site, and development site locations; no deployment performed or remote status checked.</td></tr>
+</tbody></table></div>
+<p id="no-paths" hidden>No matching paths. Try a shorter search.</p>
+</section>
+</div>
+<div id="panel-model" class="tab-panel">
+<section id="model">
+<h2><span class="num">06 / NUMERICAL MODEL</span>Configuration and transport behavior</h2>
+<p>The model follows positions through time using a fourth-order Runge–Kutta advection kernel. The <code>winds</code> flag changes the forcing folder to <code>YYYYc</code>; wind velocity is already combined with currents in those files. It does not add a wind term inside the main simulation.</p>
+<div class="table-wrap"><table><thead><tr><th>Setting</th><th>Value / behavior in inspected code</th></tr></thead><tbody>
+<tr><td>Integration / output interval</td><td><code>dt = 1 hour</code>; saved positions every <code>24 hours</code> in active and example configurations.</td></tr>
+<tr><td>Release repetition</td><td>Active/HPC configuration uses <code>repeat_release = None</code>. Batch jobs create separate monthly cohorts. <code>MainConfigExample.py</code> uses <code>False</code> instead.</td></tr>
+<tr><td>Forcing years</td><td><code>models.sequential()</code> computes years from the requested start/end dates; it does not use the configuration’s <code>years</code> entry. Time extrapolation is enabled on the velocity field.</td></tr>
+<tr><td>Diffusion</td><td>Uniform stochastic displacement uses <code>Kh_zonal</code> and <code>Kh_meridional</code>, both initialized with <code>kh = 1</code> in the model. It uses Parcels’ spherical field conversions.</td></tr>
+<tr><td>Unbeaching</td><td>Custom <code>LitterParticle</code> adds integer <code>beached</code> and <code>beached_count</code>. Near-zero velocity triggers movement with the unbeaching field. A count threshold based on 10 days marks state 4; particle deletion is commented out.</td></tr>
+<tr><td>Boundary handling</td><td>A zonal periodic halo wraps longitude. The out-of-bounds handler sets <code>particle.beached = 4</code>, including in runs that select plain <code>JITParticle</code>; that combination needs validation.</td></tr>
+<tr><td>Wind preparation</td><td>The helper <code>Combine_Currents_And_Winds_netcdf.py</code> sets a 2.5% wind contribution and 15° deflection with opposite hemisphere signs. Reader comments describe 1% combined inputs. The actual forcing files determine which settings apply.</td></tr>
+</tbody></table></div>
+<p class="source">Sources: <a href="../../config/MainConfig.py">active local configuration</a>, <a href="../../models/models.py">model setup</a>, <a href="../../mykernels/wl_kernels.py">kernels</a>, <a href="../../additional_programs/Combine_Currents_And_Winds_netcdf.py">wind preparation</a>.</p>
+</section>
+</div>
+<div id="panel-running" class="tab-panel">
+<section id="running">
+<h2><span class="num">07 / EXECUTION</span>Run, restart, merge</h2>
+<p>The CLI expects timestamps with an hour suffix, <code>YYYY-MM-DD:HH</code>. Its positional signature is:</p>
+<pre><code>python 1_WorldLitter.py START END WINDS DIFFUSION UNBEACHING NAME [RESTART_FILE EXECUTION_DAYS]</code></pre>
+<p>For example, after repairing the configuration and preparing inputs:</p>
+<pre><code># Illustrative 30-day segment: currents + winds + diffusion
+python 1_WorldLitter.py 2010-01-01:00 2010-01-31:00 True True False example_2010_01
+
+# Restart arguments must be supplied together.
+python 1_WorldLitter.py 2010-01-31:00 2010-03-02:00 True True False example_2010_01 /path/to/previous.nc 30</code></pre>
+<p>These are interface examples, not commands verified to run in the current checkout. A missing restart path causes a fresh release rather than a hard failure. Output naming needs attention: the model writes to <code>output_folder/name</code>, whereas restart and merge code append <code>config[output_file]</code>. The HPC template uses <code>.nc</code>; the active local config supplies a full run-specific filename.</p>
+<h3>HPC orchestration</h3>
+<p><code>HPC_RUN.sh</code> currently expands all months of 2010–2022 into 156 jobs, substitutes <code>YEAR</code>/<code>MONTH</code> in <code>generalrun_hpc.sh</code>, and submits each with <code>sbatch</code>. The active branch starts new runs. The template requests 32 tasks, one node, 64 GB, 20 hours, and partition <code>coaps_q</code>; it invokes the historical environment <code>/gpfs/home/osz09/.conda/envs/py3_parcels_mpi/bin/python</code>.</p>
+<p>The template advances in 30-day segments through <code>2023-01-01</code>, with flags <code>True True False</code>. Its final merge command is commented out. The extra-year template instead begins on <code>2022-01-01</code>, restarts from <code>output_final</code>, writes <code>output_2022</code>, and invokes the two merge stages. These dates and resources are saved settings, not evidence that jobs completed.</p>
+<h3>Country reporting</h3>
+<p>The active table-generation loop reads scenario prefixes <code>C</code>, <code>D</code>, and <code>I</code> for 2017–2022 and writes one JSON/CSV pair under each <code>&lt;letter&gt;&lt;year&gt;_12</code> directory. Source comments describe multiple decay scenarios, but their numerical definitions are not established by this parser. <code>Tables_2_MakeTables_PngsForPDF_Plotly.py</code> then renders PNG tables with Kaleido and calls the PDF helper. The Dash script reads a hard-coded 2022 output.</p>
+</section>
+</div>
+<div id="panel-outputs" class="tab-panel">
+<section id="outputs">
+<h2><span class="num">08 / PRODUCTS</span>What the outputs contain</h2>
+<p><strong>Output location:</strong> project outputs are stored on the COAPS host <code>mars.coaps.fsu.edu</code>, as confirmed by the project owner. See <a href="#paths">Path reference</a> for the output directories recorded in the configuration and README.</p>
+<h3>Trajectories: NetCDF and optional Zarr</h3>
+<p>Merge scripts expect <code>traj × obs</code> arrays for <code>time</code>, <code>trajectory</code>, <code>lat</code>, <code>lon</code>, and <code>z</code>, plus <code>beached</code>/<code>beached_count</code> for unbeaching runs. Script 2 removes duplicate segment-boundary observations. Script 7 directly concatenates older and newer periods, so their boundary times should be checked for overlap. <code>0_UpdateToZarr.py</code> provides an optional storage conversion.</p>
+<h3>Web particles: binary arrays and text headers</h3>
+<p>Script 4 groups particles by country, subsamples indices while reducing the stride for countries with fewer particles, and encodes latitude and longitude × 100 as signed 16-bit integers. Each header row records country, continent, number of particles, and number of time steps. Arrays store each country’s latitude block followed by its longitude block.</p>
+<p>The active multi-file exporter uses a subsampling stride of 2 and chunks of 500 observations, writing <code>…_00.bin</code> and <code>…_00.txt</code> under a stride directory. Its ZIP-writing block is commented out; the single-file function also writes a ZIP. Despite the script’s name, this is not a trajectory JSON export.</p>
+<h3>Spatial histograms: accumulated occupancy</h3>
+<p>Script 5 bins all saved particle positions on a 0.1° grid. It scales accumulated counts by <code>6.5e6 / (number_of_particles × 12)</code>, adds 1, and masks empty cells. This hard-coded mass scaling assumes 12 releases per year; it is not sourced from the release weight files. Interpret it as the implemented accumulated-location product, with its sampling and scaling assumptions, rather than a validated instantaneous concentration.</p>
+<p>Outputs go to <code>histo/</code> (NetCDF), <code>images/</code> (PNG), and <code>tiffs/</code> (GDAL conversion) beneath the configured output folder. The current main block merges existing monthly histograms; individual histogram generation is commented out.</p>
+<h3>Country statistics: direction and schema</h3>
+<p><code>sum_from_COUNTRY</code> describes waste originating in that country and its destinations, with ocean/beach totals. <code>sum_to_COUNTRY</code> describes waste arriving at that country and its sources. JSON nests these under country keys with <code>from</code>/<code>to</code> objects, totals, and lists of <code>{name, tons, perc}</code>. The parser removes countries without a <code>from</code> object and excludes filenames containing <code>_CBS_</code>.</p>
+<p>The CSV is a human-readable sequence of country table blocks rather than a normalized one-row-per-country-pair dataset. The active parser expects semicolon-delimited scenario files; root-level older statistics files are fixed-width, for which separate <code>*_nodecay</code> readers exist.</p>
+</section>
+</div>
+<div id="panel-readiness" class="tab-panel">
+<section id="readiness">
+<h2><span class="num">09 / REPRODUCIBILITY</span>What needs attention before execution</h2>
+<p>This is a collection of research scripts with machine-specific settings. No dependency manifest or lockfile was found in the reviewed code tree. Dependencies inferred from imports include OceanParcels, NumPy, xarray, netCDF4, pandas, GeoPandas, Shapely, Matplotlib, Cartopy, Plotly, Dash, and dash-bootstrap-components. Additional workflows use mpi4py/MPI, Dask/Zarr, pyshp, Kaleido, GDAL, ImageMagick, Ghostscript, and Slurm. Compatible versions are not pinned here.</p>
+<ol>
+<li><strong>Unify configuration keys.</strong> Reconcile the simulation’s <code>WorldLitter</code> imports with <code>GlobalModel</code> in <code>params.py</code> and active <code>MainConfig.py</code>. Copying an HPC example alone does not fix the mismatch.</li>
+<li><strong>Restore data paths and matching metadata.</strong> The configured forcing/release/output mounts are absent locally. Select the correct release set, regenerate or locate its country index CSV, and update old absolute repository paths.</li>
+<li><strong>Match forcing conventions.</strong> The reader extracts the date from the fifth underscore-separated filename token. Check actual filenames, velocity variables, time coverage, coordinate ranges, and whether winds are already included.</li>
+<li><strong>Reconcile segment filenames and batch templates.</strong> Align shell output folders with the active Python configuration and verify both restart arguments. The extra-year shell template contains un-commented explanatory prose that would be interpreted as commands.</li>
+<li><strong>Validate a short run and its merge.</strong> Check particle count/order, time endpoints, longitude wrapping, and the selected beach-state behavior before scaling up. Script 2’s initialization assumes multiple segments; a one-segment merge needs separate handling.</li>
+<li><strong>Check each reporting input format and units.</strong> Use the correct reader for fixed-width versus semicolon files, preserve scenario meaning, and verify histogram scaling and time-boundary overlap before interpreting products.</li>
+</ol>
+<details><summary>Dependency and test notes</summary><p><code>.gitmodules</code> registers <code>eoas_pyutils</code>, but its checkout is absent; <code>10_Extras.py</code> references it. The source uses older Parcels interfaces such as <code>ErrorCode</code>, <code>parcels.rng</code>, and <code>ParticleFile.export()</code>, so library compatibility needs checking. <code>PerformanceTests/</code>, <code>8_Verify_Output.py</code>, and existing advection/diffusion notes provide starting points, but were not executed for this documentation task.</p></details>
+<details><summary>What is not established by the repository review</summary><p>This guide does not establish complete dataset provenance, the definitions of C/D/I scenarios, remote storage availability, the correctness of scientific results, or whether historical runs finished successfully. Existing file names and saved configurations identify intended periods and workflows, not validation evidence.</p></details>
+</section>
+</div>
+<div id="panel-sources" class="tab-panel">
+<section id="sources">
+<h2><span class="num">10 / READING GUIDE</span>Sources and review scope</h2>
+<p>For function contracts, type hints, configuration units, restart behavior, and local validation commands, read the <a href="../CODE_GUIDE.md">code guide</a>.</p>
+<p>This summary was derived from the local README, active and example configurations, simulation/model/kernel code, preprocessing/export scripts, shell templates, and representative data headers. It includes current uncommitted changes and locally available untracked data. No external data were downloaded, no cluster jobs were submitted, and no project calculations were rerun.</p>
+<p>The COAPS mount identification and output host <code>mars.coaps.fsu.edu</code> were supplied by the project owner.</p>
+<p>Start with <a href="../../README.md">README.md</a>, then <a href="../../config/MainConfig.py">MainConfig.py</a>, <a href="../../1_WorldLitter.py">1_WorldLitter.py</a>, <a href="../../models/models.py">models/models.py</a>, and <a href="../../utils/io_hycom.py">utils/io_hycom.py</a>. For reporting, read <a href="../../Tables_1_Make_Tables_by_Country.py">the country statistics parser</a> and <a href="../../Tables_2_MakeTables_PngsForPDF_Plotly.py">the Plotly/PDF renderer</a>. Supporting notes include <a href="../Eqns.tex">Eqns.tex</a> and <a href="../AdvectionTests/Info.txt">advection test notes</a>.</p>
+<div class="callout"><strong>Using this guide:</strong> open <code>index.html</code> directly in a browser. All styling and interactions are embedded, with no network dependencies. Source links are relative to this repository and continue working if the repository is moved together. The Git-ignored active configuration link is specific to this checkout.</div>
+</section>
+</div>
+<footer>WorldLitter · Code and data guide · Prepared 15 September 2026 · Documentation snapshot, not a simulation-results report.</footer>
+</main>
+</div>
+<script>
+const tabList=document.querySelector('.nav');
+const tabs=Array.from(tabList.querySelectorAll('a'));
+const panels=Array.from(document.querySelectorAll('.tab-panel'));
+tabList.setAttribute('role','tablist');
+const mobileTabs=window.matchMedia('(max-width:720px)');
+function setTabOrientation(){tabList.setAttribute('aria-orientation',mobileTabs.matches?'horizontal':'vertical');}
+setTabOrientation();mobileTabs.addEventListener('change',setTabOrientation);
+for(const tab of tabs){tab.setAttribute('role','tab');tab.setAttribute('aria-controls','panel-'+tab.hash.slice(1));}
+for(const panel of panels){panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',panel.id.replace('panel-','tab-'));panel.tabIndex=0;}
+function selectTab(name){
+  for(const tab of tabs){const active=tab.id==='tab-'+name;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
+  for(const panel of panels)panel.hidden=panel.id!=='panel-'+name;
+}
+function syncTabToHash(scroll=false){
+  const target=document.getElementById(location.hash.slice(1));
+  const panel=target&&target.closest('.tab-panel');
+  selectTab(panel?panel.id.replace('panel-',''):'overview');
+  if(scroll&&panel)target.scrollIntoView({behavior:'instant',block:'start'});
+}
+function openTab(tab){
+  if(location.hash!==tab.hash)history.pushState(null,'',tab.hash);
+  selectTab(tab.hash.slice(1));
+  window.scrollTo({top:0,behavior:'instant'});
+  tab.scrollIntoView({behavior:'instant',block:'nearest',inline:'nearest'});
+}
+for(const tab of tabs){
+  tab.addEventListener('click',event=>{
+    if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    event.preventDefault();openTab(tab);
+  });
+  tab.addEventListener('keydown',event=>{
+    if(event.key===' '){event.preventDefault();openTab(tab);return;}
+    let index=tabs.indexOf(tab);
+    const next=mobileTabs.matches?'ArrowRight':'ArrowDown';
+    const previous=mobileTabs.matches?'ArrowLeft':'ArrowUp';
+    if(event.key===next)index=(index+1)%tabs.length;
+    else if(event.key===previous)index=(index+tabs.length-1)%tabs.length;
+    else if(event.key==='Home')index=0;
+    else if(event.key==='End')index=tabs.length-1;
+    else return;
+    event.preventDefault();tabs[index].focus({preventScroll:true});openTab(tabs[index]);
+  });
+}
+// Keep section links and browser history working across hidden panels.
+document.querySelectorAll('main a[href^="#"]').forEach(link=>link.addEventListener('click',()=>{
+  const target=document.getElementById(link.hash.slice(1));
+  const panel=target&&target.closest('.tab-panel');
+  if(panel)selectTab(panel.id.replace('panel-',''));
+}));
+window.addEventListener('hashchange',()=>syncTabToHash(true));
+syncTabToHash(Boolean(location.hash));
+
+const input=document.getElementById('path-search');
+const rows=Array.from(document.querySelectorAll('#path-table tbody tr'));
+function filterPaths(){const q=input.value.toLowerCase().trim();let count=0;for(const row of rows){row.hidden=!row.textContent.toLowerCase().includes(q);if(!row.hidden)count++;}document.getElementById('path-count').textContent=count+' of '+rows.length+' paths';document.getElementById('no-paths').hidden=count!==0;}
+input.addEventListener('input',filterPaths);filterPaths();
+document.getElementById('print').addEventListener('click',()=>window.print());
+let printState;
+window.addEventListener('beforeprint',()=>{printState={query:input.value,open:Array.from(document.querySelectorAll('details')).map(d=>d.open)};input.value='';filterPaths();document.querySelectorAll('details').forEach(d=>d.open=true);});
+window.addEventListener('afterprint',()=>{if(!printState)return;input.value=printState.query;filterPaths();document.querySelectorAll('details').forEach((d,i)=>d.open=printState.open[i]);});
+</script>
+</body>
+</html>

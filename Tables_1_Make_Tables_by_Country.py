@@ -1,3 +1,16 @@
+"""Convert externally computed country statistics into JSON and CSV reports.
+
+These readers do not derive statistics from trajectory NetCDF files. They accept
+two legacy text layouts: fixed-width no-decay tables and semicolon-delimited
+tables. Parser results retain source tons and percent units without rescaling.
+See Docs/CODE_GUIDE.md for output structure and error-sentinel behavior.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List, Mapping, Sequence, TextIO, Tuple, Union
+
+
 import pandas as pd
 import geopandas as gpd
 from os.path import join
@@ -6,17 +19,21 @@ from enum import Enum
 import json
 from utils.several_utils import replace_names
 from config.MainConfig import get_op_config
-from config.params import WorldLitter
+from config.params import GlobalModel
 import numpy as np
 from shapely.geometry import Polygon, Point, MultiPoint
 from config.MainConfig import get_preproc_config
-from config.params import WorldLitter, Preproc
 import shapely.speedups
 import matplotlib.pyplot as plt
 import collections
 
 # sftp://ozavala@enterprise/home/xbxu/hycom/GLBv0.08/nations
-def get_reached(data, col_name, col_particle):
+def get_reached(data: pd.DataFrame, col_name: str, col_particle: str) -> Dict[str, List[int]]:
+    """Map normalized country names to [arrived, total] integer counts.
+
+    ``col_particle`` must contain strings such as '1,234[5,678]'. For repeated
+    country rows, the first matching row supplies the counts.
+    """
     reached = {}
     for c_reached_country in data[col_name].values:
         country_data = data[data[col_name] == c_reached_country]
@@ -26,10 +43,22 @@ def get_reached(data, col_name, col_particle):
         reached[replace_names(c_reached_country)] = [arrived, total]
     return reached
 
-def remove_brackets(text):
+def remove_brackets(text: str) -> str:
+    """Remove brackets, percent signs, and colons, then trim surrounding spaces."""
     return text.replace('[','').replace(']','').replace('%','').replace(':','').strip()
 
-def readto_nodecay(f, json_names, json_ids):
+def readto_nodecay(
+    f: TextIO,
+    json_names: Sequence[str],
+    json_ids: Sequence[str],
+) -> Tuple[Union[Dict[str, Any], int], str]:
+    """Read a fixed-width 'to' report from the current stream position.
+
+    Resolve the header country ID through parallel json_ids/json_names lists.
+    Return (report, country_name); report has name, tot_tons, and a to list
+    of {name, tons, perc} records. Caught lookup/row errors return (-1, name);
+    malformed headers parsed before the try block can still raise.
+    """
     all_lines = f.readlines()
 
     table_country_name = remove_brackets(all_lines[0][30:-1]).lower()
@@ -60,12 +89,17 @@ def readto_nodecay(f, json_names, json_ids):
         print(F"Not found: {table_country_name}")
         return -1, table_country_name
 
-def readfrom_nodecay(f, json_names, json_ids):
-    """
-    Reads a single file with the statistics and matches the name with the json names being used
-    :param f:
-    :param json_names:
-    :return:
+def readfrom_nodecay(
+    f: TextIO,
+    json_names: Sequence[str],
+    json_ids: Sequence[str],
+) -> Tuple[Union[Dict[str, Any], int], str]:
+    """Read a fixed-width 'from' report and resolve its header country ID.
+
+    Return (report, country_name), including tot_tons, ocean_tons/ocean_perc,
+    beach_tons/beach_perc, and a from list of {name, tons, perc} records.
+    Caught lookup/row errors return (-1, name); header and total parsing before
+    the try block can raise. The supplied text stream is consumed, not closed.
     """
     all_lines = f.readlines()
 
@@ -108,7 +142,13 @@ def readfrom_nodecay(f, json_names, json_ids):
         print(F"Not found: {table_country_name}")
         return -1, table_country_name
 
-def readto(f):
+def readto(f: TextIO) -> Tuple[Union[Dict[str, Any], int], str]:
+    """Read a semicolon-delimited 'to' report from an open text stream.
+
+    Return (report, country_name), with name, tot_tons, and a to list of
+    {name, tons, perc} rows. Names come from the bracketed header. Caught row
+    errors return (-1, name); malformed initial headers can still raise.
+    """
     all_lines = f.readlines()
 
     first_line = all_lines[0].split(';')
@@ -141,12 +181,12 @@ def readto(f):
         print(F"Not found: {table_country_name}")
         return -1, table_country_name
 
-def readfrom(f):
-    """
-    Reads a single file with the statistics and matches the name with the json names being used
-    :param f:
-    :param json_names:
-    :return:
+def readfrom(f: TextIO) -> Tuple[Union[Dict[str, Any], int], str]:
+    """Read a semicolon-delimited 'from' report from an open text stream.
+
+    Return (report, country_name), with total tons, ocean/beach tons and
+    percentages, and a from list of {name, tons, perc} records. Caught row
+    errors return (-1, name); malformed headers or totals can still raise.
     """
     all_lines = f.readlines()
 
@@ -202,7 +242,13 @@ def readfrom(f):
         print(F"Not found: {table_country_name} Exception: {e}")
         return -1, table_country_name
 
-def jsonToCSV(json_object, file_name):
+def jsonToCSV(json_object: Mapping[str, Any], file_name: str) -> None:
+    """Write nested country reports as human-readable CSV blocks.
+
+    Input maps country names to optional 'from' and 'to' reports. Output uses
+    section headers and blank cells; it is not a single normalized data table.
+    The destination is overwritten. Per-country formatting errors are printed.
+    """
     print("Converting JSON to CSV")
     json_object = collections.OrderedDict(sorted(json_object.items()))
     header_line = "Country Name, Tons Exported, Ends in the Ocean, Ends in the beach"
@@ -250,8 +296,15 @@ def jsonToCSV(json_object, file_name):
 
     print("Done!")
 
-def makeJsonAndCsvFiles(stats_folder, output_folder):
+def makeJsonAndCsvFiles(stats_folder: str, output_folder: str) -> None:
 
+    """Read country text reports and write ReachedTablesData.json and .csv.
+
+    Recognize _from_ and _to_ filenames, excluding _CBS_ and swap files. Use
+    the semicolon parsers, group by country, and discard countries without a
+    'from' report. Output contains imported statistics, not new simulations.
+    Review the hard-coded scenario paths in the main block before execution.
+    """
     all_files = os.listdir(stats_folder)
     all_files.sort()
     shapely.speedups.enable()
@@ -262,7 +315,8 @@ def makeJsonAndCsvFiles(stats_folder, output_folder):
     json_object = {}
     for cur_file in all_files:
         if cur_file.find("swp") == -1:
-            if cur_file.find("_from_") != -1:
+            # if cur_file.find("_from_") != -1:
+            if cur_file.find("_from_") != -1 and cur_file.find("_CBS_") == -1:
                 print(F"------ Reading file: {cur_file} --------")
                 f = open(join(stats_folder, cur_file), "r")
                 obj_from, country_name = readfrom(f)
@@ -277,7 +331,7 @@ def makeJsonAndCsvFiles(stats_folder, output_folder):
                     # Comment this part, only for debuggin
                     all_names.append(country_name)
 
-            if cur_file.find("_to_") != -1:
+            if cur_file.find("_to_") != -1 and cur_file.find("_CBS_") == -1:
                 print(F"------ Reading file: {cur_file} --------")
                 f = open(join(stats_folder, cur_file), "r")
                 obj_to, country_name = readto(f)
@@ -319,10 +373,20 @@ if __name__ == "__main__":
     # output_folder = config[WorldLitter.output_folder]
     # makeJsonAndCsvFiles(input_folder, output_folder)
     # ----------------- Multiple years ---------------
-    years = range(2017,2022)
-    rfolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/MultipleYears"
-    ofolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
-    for year in years:
-        input_folder = join(rfolder, F"C{year}_12")
-        output_folder = join(ofolder, F"{year}")
-        makeJsonAndCsvFiles(input_folder, output_folder)
+    # years = range(2017,2022)
+    # rfolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/MultipleYears"
+    # ofolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
+    # for year in years:
+    #     input_folder = join(rfolder, F"C{year}_12")
+    #     output_folder = join(ofolder, F"{year}")
+    #     makeJsonAndCsvFiles(input_folder, output_folder)
+
+    # ----------------- Last Version Multiple decays ---------------
+    years = range(2017,2023)
+    rfolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/New_Scenarios/"
+    ofolder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs/New_Scenarios/"
+    for letter in ['C','D','I']:
+        for year in years:
+            input_folder = join(rfolder, F"{letter}{year}_12")
+            output_folder = join(ofolder, F"{letter}{year}_12")
+            makeJsonAndCsvFiles(input_folder, output_folder)

@@ -273,8 +273,7 @@ def makePNGs(root_folder, output_folder, plot_type="pie"):
             ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
                     shadow=True, startangle=90)
             ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-
-            plt.show()
+            # plt.show()
         if plot_type == 'bar':
             if len(country_from_data[years_str[0]]) > 0:
                 df = pd.DataFrame(country_from_data)
@@ -315,10 +314,10 @@ if __name__ == "__main__":
     root_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
     output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/MultipleYears"
 
-    makePNGs(root_folder, output_folder)
+    makePNGs(root_folder, output_folder, plot_type="bar")
 
     # ---------------- Multiple years ---------------
-    years = range(2017,2022)
+    years = range(2017,2023)
     in_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/table_images/MultipleYears"
     pdf_output_folder = "/home/olmozavala/Dropbox/MyProjects/EOAS/COAPS/UN_Ocean_Litter/WorldLitter/data/reached_data_tables/Outputs"
 
